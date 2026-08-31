@@ -1,0 +1,12 @@
+# これはサンプルであり、実際のファイル名は webadmin_id_ed25519.pub (拡張子 .example を外す)。
+#
+# 手順(03-build-guide.md Step 3を参照):
+#   1. 自分のPC(コントロールノード)で鍵ペアを作成する
+#        ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_ansible -C "webadmin@portfolio"
+#   2. 作成された公開鍵ファイル(~/.ssh/id_ed25519_ansible.pub)の中身を、
+#      このファイルと同じ場所に webadmin_id_ed25519.pub という名前でコピーする
+#        cp ~/.ssh/id_ed25519_ansible.pub files/webadmin_id_ed25519.pub
+#
+# 下記は「公開鍵のフォーマット例」であり、実際の鍵データではない。
+# このファイル(.example)自体はPlaybookから読み込まれない。
+ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIExampleExampleExampleExampleExampleABCDE webadmin@portfolio-example

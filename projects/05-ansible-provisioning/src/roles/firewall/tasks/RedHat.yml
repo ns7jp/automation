@@ -1,0 +1,25 @@
+---
+# roles/firewall/tasks/RedHat.yml
+# RHEL/AlmaLinux/Rocky Linux系で使う firewalld の設定。
+
+- name: firewalldパッケージがインストールされていることを確認する
+  ansible.builtin.package:
+    name: firewalld
+    state: present
+
+- name: firewalldサービスを起動・自動起動有効化する
+  ansible.builtin.systemd:
+    name: firewalld
+    state: started
+    enabled: true
+  # firewalldは「サービスとして起動している」ことが前提。
+  # このタスクを飛ばして次のfirewalldモジュールを実行すると、
+  # 「Failed to connect to bus」のようなエラーになる(05-troubleshooting.md Q7参照)。
+
+- name: firewalldでSSH/HTTP/HTTPSサービスを許可する
+  ansible.posix.firewalld:
+    service: "{{ item }}"
+    permanent: true   # 設定をディスクに保存し、再起動後も有効にする
+    immediate: true   # 今動いているfirewalldにも即座に反映する(permanentだけだと再起動しないと効かない)
+    state: enabled
+  loop: "{{ firewall_allowed_services }}"

@@ -1,0 +1,35 @@
+---
+# roles/firewall/tasks/Debian.yml
+# Ubuntu/Debian系で使う ufw(Uncomplicated Firewall)の設定。
+
+- name: ufwパッケージをインストールする
+  ansible.builtin.package:
+    name: ufw
+    state: present
+
+- name: ufwのデフォルトポリシーを設定する(受信は拒否、送信は許可)
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - direction: incoming
+      policy: deny   # 明示的に許可した通信以外はすべて拒否
+    - direction: outgoing
+      policy: allow  # サーバーから外に出る通信は許可(パッケージ取得等に必要)
+  loop_control:
+    label: "{{ item.direction }} => {{ item.policy }}"
+    # loop_controlのlabelは、実行結果を表示するときにloop内の値の一部だけを
+    # わかりやすく表示するための指定(ログの可読性向上が目的で、動作自体には影響しない)。
+
+- name: ufwで許可ポート(SSH/HTTP/HTTPS)を開放する
+  community.general.ufw:
+    rule: allow
+    port: "{{ item | string }}"
+    proto: tcp
+  loop: "{{ firewall_allowed_tcp_ports }}"
+
+- name: ufwを有効化する
+  community.general.ufw:
+    state: enabled
+  # 既に有効な状態でこのタスクを実行しても "ok"(変更なし)のままになる。
+  # これもべき等性の一例。

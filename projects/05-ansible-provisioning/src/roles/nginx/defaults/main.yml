@@ -1,0 +1,7 @@
+---
+# roles/nginx/defaults/main.yml
+
+nginx_listen_port: 80
+nginx_server_name: "_"                # "_" はNginxで「どのホスト名にもマッチするデフォルト設定」を意味する慣例的な書き方
+nginx_document_root: /var/www/html    # 公開する静的ファイルの置き場所
+nginx_site_title: "Ansible Provisioning Demo"

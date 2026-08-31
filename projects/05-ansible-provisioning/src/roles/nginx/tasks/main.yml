@@ -1,0 +1,69 @@
+---
+# roles/nginx/tasks/main.yml
+# nginx Role: Nginxをインストールし、ポート80で静的ページを公開する設定を投入する。
+
+- name: Nginxをインストールする
+  ansible.builtin.package:
+    name: nginx
+    state: present
+
+- name: ドキュメントルート用ディレクトリを作成する
+  ansible.builtin.file:
+    path: "{{ nginx_document_root }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+    # mode 0755(所有者:読み書き実行、それ以外:読み取り実行)にしておくことで、
+    # Nginxの実行ユーザー(www-data や nginx。OSによって異なる)が
+    # 所有者でなくてもファイルを読みに来られるようにしている。
+
+- name: Ubuntu標準の初期サイト設定(sites-enabled/default)を無効化する
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  when: ansible_facts['os_family'] == "Debian"
+  # Ubuntuのnginxパッケージには、標準で「ポート80のデフォルトサイト」を
+  # 提供する設定(sites-enabled/default)が最初から入っている。
+  # これを残したまま自前の設定(後述のportfolio-site.conf)を追加すると、
+  # どちらも「ポート80のdefault_server」を名乗ることになり、
+  # "duplicate default server" という設定エラーで起動に失敗する
+  # (詳しくは 05-troubleshooting.md Q6を参照)。
+  notify:
+    - Validate nginx config
+    - Reload nginx
+
+- name: Nginxのバーチャルホスト設定を配置する
+  ansible.builtin.template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/conf.d/portfolio-site.conf
+    owner: root
+    group: root
+    mode: "0644"
+  # /etc/nginx/conf.d/ はUbuntu/AlmaLinuxどちらのNginxパッケージでも、
+  # デフォルトのnginx.confから "include conf.d/*.conf;" で読み込まれる場所。
+  # そのため、このディレクトリに置くだけでOSの違いを気にせず同じ手順で設定できる。
+  notify:
+    - Validate nginx config
+    - Reload nginx
+
+- name: 公開する静的ページ(index.html)を配置する
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: "{{ nginx_document_root }}/index.html"
+    owner: root
+    group: root
+    mode: "0644"
+  # index.htmlの変更はnginxの再読込が無くてもすぐ反映される(静的ファイルなので)。
+  # そのためこのタスクにはnotifyを付けていない。
+
+- name: Nginxサービスを起動・自動起動を有効化する
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: true
+  # このタスクは「今動いているか/自動起動が有効か」を確認・保証するためのもので、
+  # Handler(変更があったときだけ動く)とは役割が違う。
+  # 例えば手動でnginxを止めてしまった後にPlaybookを再実行した場合、
+  # 設定ファイル自体には変更が無くてもこのタスクが「起動していない」ことを検知し、
+  # 再度起動してくれる。

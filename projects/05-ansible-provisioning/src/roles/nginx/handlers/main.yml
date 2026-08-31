@@ -1,0 +1,26 @@
+---
+# roles/nginx/handlers/main.yml
+# 設定ファイルを変更したタスクからnotifyされる後処理をまとめている。
+#
+# ★重要なポイント: Handlerは「notifyされた順番」ではなく、
+# 「このファイルに書かれている順番」で実行される。
+# そのため、必ず「設定ファイルの文法チェック」→「反映(reload)」の順に
+# なるよう、Validateを上に、Reloadを下に書いている。
+
+- name: Validate nginx config
+  ansible.builtin.command: nginx -t
+  # nginx -t は設定ファイルの文法だけを検証し、実際には反映しないコマンド。
+  # 検証専用のコマンドなので、実行してもサーバーの状態は変わらない。
+  # そのため changed_when: false を指定し、「実行はするが変更扱いにはしない」ようにしている
+  # (これを指定しないと、実行するたびに changed 扱いになってしまい、
+  #  べき等性の確認(2回目の実行がchanged=0になること)がわかりにくくなる)。
+  changed_when: false
+
+- name: Reload nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: reloaded
+  # restartではなくreloadを使う理由: restartは一度プロセスを完全に終了してから
+  # 立ち上げ直すため、その一瞬アクセスできない時間が発生する。
+  # reloadは新しい設定ファイルだけを再読込し、稼働中の接続を切らずに反映できる
+  # (Nginxの設定変更の多くはreloadで反映可能)。

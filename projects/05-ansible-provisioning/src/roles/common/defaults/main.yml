@@ -1,0 +1,16 @@
+---
+# roles/common/defaults/main.yml
+# このRoleで使う変数の「デフォルト値」を定義する。
+# defaults は変数の優先順位が最も低く、group_vars等で上書きされることを
+# 前提にした「初期値置き場」という位置づけ。
+
+# タイムゾーン設定
+common_timezone: Asia/Tokyo
+
+# 全サーバー共通で入れておきたい最低限のパッケージ
+# (OSごとにパッケージ名が違うものは含めない。あくまで両OSで名前が共通のものだけ)
+common_packages:
+  - vim
+  - curl
+  - unzip
+  - git

@@ -1,0 +1,146 @@
+name: CI/CD Pipeline - Deploy Web App
+
+# ============================================================
+# 案件No.6: GitHub ActionsによるCI/CD自動デプロイパイプライン
+#
+# 概要:
+#   1. mainブランチへのpush、およびmainブランチ向けのpull_requestを
+#      トリガーに、shellcheck(シェルスクリプトの構文チェック)と
+#      サンプルアプリの簡易テストを実行する(CI = 継続的インテグレーション)。
+#   2. mainブランチへのpushで、かつテストがすべて成功した場合のみ、
+#      検証/本番サーバーへ rsync(SSH経由)でファイルを自動反映する
+#      (CD = 継続的デリバリー/デプロイ)。
+#   3. デプロイ結果(成功/失敗)をSlackへ通知し、GitHub Actions上でも
+#      ジョブの成否(緑のチェック/赤いバツ)として確認できるようにする。
+#
+# 配置場所(重要):
+#   このファイルは、実際に使う際はリポジトリ直下の
+#   .github/workflows/deploy.yml に配置する(このパスに置かれた
+#   YAMLファイルだけをGitHub Actionsが自動的に読み込む)。
+#   詳細は 03-build-guide.md を参照。
+#
+# 機密情報の扱い:
+#   接続先サーバー情報・SSH秘密鍵は、すべてGitHub Secretsに登録した
+#   値(${{ secrets.XXX }})を使用し、このファイル自体には一切書かない。
+#   理由はREADME.md「Secretsを使う理由」を参照。
+# ============================================================
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: {}
+  # workflow_dispatch: GitHubのActionsタブから、pushをせずに手動でも
+  #   ワークフローを実行できるようにするトリガー。緊急時の再デプロイや
+  #   動作確認に使う。
+
+# GITHUB_TOKEN(ワークフローに自動的に払い出されるトークン)の権限を
+# 必要最小限(リポジトリの読み取りのみ)に絞る設定。
+# 本ワークフローはコードのチェックアウトと外部サーバーへのSSH接続しか
+# 行わないため、書き込み権限などは不要という考え方(最小権限の原則)。
+permissions:
+  contents: read
+
+# 同一ワークフローの多重実行を制御する設定。
+# 短時間に複数回pushされた場合でも、rsyncによるデプロイ処理が
+# 同時に2つ以上走ってサーバー上のファイルが競合するのを防ぐ。
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+  # cancel-in-progress: false にしている理由:
+  #   trueにすると「実行中のデプロイを強制中断」してしまい、rsyncが
+  #   ファイルを転送している途中でサーバー側が中途半端な状態になる
+  #   危険がある。そのため、進行中のデプロイは最後まで完了させ、
+  #   後から来たデプロイはキューで待たせる方針にしている。
+
+jobs:
+  # ------------------------------------------------------------
+  # test ジョブ(CI: 継続的インテグレーション)
+  #   push・pull_requestの両方で必ず実行される。
+  #   ここが失敗すると、後続のdeployジョブは実行されない。
+  # ------------------------------------------------------------
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        # actions/checkout: リポジトリの中身をこのジョブの実行環境
+        # (ランナー)へcloneしてくる、GitHub公式の定番Action。
+
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on shell scripts
+        run: find scripts -type f -name "*.sh" -print0 | xargs -0 shellcheck
+
+      - name: Run application smoke tests
+        run: bash scripts/test.sh
+
+  # ------------------------------------------------------------
+  # deploy ジョブ(CD: 継続的デリバリー/デプロイ)
+  #   testジョブが成功し、かつ「mainブランチへのpush」のときだけ
+  #   実行される(pull_requestやmain以外のブランチへのpushでは
+  #   実行されない)。
+  # ------------------------------------------------------------
+  deploy:
+    name: Deploy to Server
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write deploy SSH private key to file
+        run: |
+          umask 077
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > deploy_key
+        # umask 077 を先に指定してからファイルを作成することで、
+        # 作成した瞬間から「所有者以外は読めない」権限(600相当)になる。
+        # 秘密鍵ファイルは一瞬たりとも他人が読める状態にしないための工夫。
+
+      - name: Run deploy script (rsync over SSH)
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: deploy_key
+        run: bash scripts/deploy.sh
+        # ワークフロー自体には接続先やデプロイ処理の詳細を書かず、
+        # scripts/deploy.sh に処理を委譲している。こうしておくと、
+        # 同じデプロイ処理をCI経由でも手元からでも実行でき、
+        # 「CIだけの特別な処理」を極力減らせる(02-design.md参照)。
+
+      - name: Remove private key file
+        if: always()
+        run: rm -f deploy_key
+        # if: always() を付けているため、直前のステップが失敗しても
+        # 必ずこのステップは実行され、秘密鍵ファイルの削除(後始末)が
+        # 保証される。
+
+      - name: Notify deploy result to Slack
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          if [ "${{ job.status }}" = "success" ]; then
+            ICON="✅"
+            TEXT="デプロイ成功"
+          else
+            ICON="🔴"
+            TEXT="デプロイ失敗"
+          fi
+          curl -s -X POST -H 'Content-type: application/json' \
+            --data "{\"text\": \"${ICON} [${{ github.repository }}] ${TEXT} (commit: ${{ github.sha }})\"}" \
+            "$SLACK_WEBHOOK_URL"
+        # job.status: このジョブ全体が現時点で成功しているか失敗しているかを
+        # 表すコンテキスト変数。if: always() と組み合わせることで、
+        # 「成功したら成功メッセージ、失敗したら失敗メッセージ」を
+        # 必ず1回だけSlackへ送信できる。

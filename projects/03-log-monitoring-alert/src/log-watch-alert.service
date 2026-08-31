@@ -1,0 +1,50 @@
+[Unit]
+# Description : `systemctl status` やログに表示される説明文
+# (Documentation= は付けていない。/opt/log-watch-alert/ 配下には
+#  log-watch-alert.sh と .env しか配置しないため(02-design.md 3節参照)、
+#  存在しないファイルを指すDocumentation=を書かないようにしている)
+Description=Log Watch Alert - ERROR/CRITICALログ監視とSlack通知
+# After/Wants : ネットワークが使える状態になってから起動したい
+# (起動直後にSlackへ通知を送る可能性があるため、ネットワーク未接続の
+#  状態で起動が完了してしまうのを避ける)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Type=simple : ExecStart で起動したプロセスが「フォアグラウンドで
+# 動き続けること」自体をサービスの本体とみなすモード。log-watch-alert.sh は
+# tail -F によって常駐し続けるので、このモードが適している。
+Type=simple
+
+# EnvironmentFile= : 指定した .env ファイルの中身を「KEY=VALUE」の形式で
+# 読み込み、ExecStart のプロセスに環境変数として渡す。
+EnvironmentFile=/opt/log-watch-alert/.env
+
+ExecStart=/opt/log-watch-alert/log-watch-alert.sh
+
+# Restart=on-failure : プロセスが異常終了(0以外の終了コード)した場合に
+# 自動的に再起動する。RestartSec=5 で、再起動までに5秒待つ
+# (異常終了を繰り返すサービスがCPUを使い切らないようにするための間隔)。
+Restart=on-failure
+RestartSec=5
+
+# 専用の非rootユーザーで実行する(権限を必要最小限に絞るため)
+User=logwatch
+Group=logwatch
+
+# ---- セキュリティ強化オプション(必須ではないが、実務では推奨される設定) ----
+# NoNewPrivileges   : 実行中に新たな権限を取得できないようにする
+# ProtectSystem=strict : /usr や /etc など、システム領域全体を読み取り専用にする
+# ReadWritePaths    : strict指定時でも書き込みを許可するパスを個別に指定する
+# ReadOnlyPaths     : 監視対象のログはあくまで「読むだけ」なので読み取り専用にする
+NoNewPrivileges=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/log-watch-alert
+ReadOnlyPaths=/var/log/app
+
+[Install]
+# WantedBy=multi-user.target : 通常のマルチユーザーモードで起動したときに
+# このサービスも自動的に有効化対象となる、という指定。
+# `systemctl enable` を実行すると、この指定に基づいてシンボリックリンクが
+# 作成され、サーバー再起動後も自動的に起動するようになる。
+WantedBy=multi-user.target

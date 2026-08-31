@@ -1,0 +1,16 @@
+---
+# roles/firewall/tasks/main.yml
+# firewall Role: OSファミリーに応じて ufw(Debian系) / firewalld(RedHat系) を
+# 使い分け、SSH/HTTP/HTTPSのみを許可する。
+#
+# include_tasks はその場で別のタスクファイルを読み込んで実行する仕組み。
+# 1つのmain.ymlに if文のような分岐を大量に書くのではなく、
+# OSごとにファイルを分けることで、それぞれの見通しを良くしている。
+
+- name: Debian系(ufw)向けのファイアウォール設定を実行する
+  ansible.builtin.include_tasks: Debian.yml
+  when: ansible_facts['os_family'] == "Debian"
+
+- name: RedHat系(firewalld)向けのファイアウォール設定を実行する
+  ansible.builtin.include_tasks: RedHat.yml
+  when: ansible_facts['os_family'] == "RedHat"

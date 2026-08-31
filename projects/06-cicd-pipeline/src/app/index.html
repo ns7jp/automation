@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>サンプル商事 - コーポレートサイト(CI/CD検証用)</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <h1>株式会社サンプル商事</h1>
+    <p>GitHub Actions CI/CD自動デプロイパイプライン 検証用サイト</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>このページについて</h2>
+      <p>
+        このページは、GitHub Actionsによる自動デプロイパイプラインの
+        動作確認用に用意したサンプルWebアプリです。<code>main</code>ブランチへ
+        pushすると、自動テスト(shellcheck・簡易テスト)を経て、このページの
+        内容が自動的に検証/本番サーバーへ反映される仕組みになっています。
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>デプロイ状況の確認方法</h2>
+      <p>
+        直近のデプロイ情報は <a href="deploy-info.txt">deploy-info.txt</a>
+        から確認できます。このファイルはデプロイのたびに
+        <code>scripts/deploy.sh</code>が自動生成・上書きするため、
+        「いつ・どのコミットが反映されたか」を後から追跡できます。
+      </p>
+    </div>
+  </main>
+
+  <footer>
+    <p>&copy; 2026 Sample Shoji Co., Ltd.(架空の会社です。ポートフォリオ用サンプル)</p>
+  </footer>
+</body>
+</html>
