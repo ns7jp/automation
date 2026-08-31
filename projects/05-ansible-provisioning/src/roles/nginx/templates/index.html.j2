@@ -1,0 +1,22 @@
+<!--
+  {{ ansible_managed }}
+  index.html.j2 から生成された静的ページ。
+  ansible_facts / ansible_date_time は、Playbook実行時にgather_factsで
+  収集された「対象サーバーの情報」を参照している(ハードコードではない)。
+-->
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ nginx_site_title }}</title>
+</head>
+<body>
+  <h1>{{ nginx_site_title }}</h1>
+  <p>このページはAnsible Playbook(site.yml)によって自動構築されました。</p>
+  <ul>
+    <li>ホスト名: {{ ansible_facts['hostname'] }}</li>
+    <li>OS: {{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}</li>
+    <li>構築日時: {{ ansible_date_time.iso8601 }}</li>
+  </ul>
+</body>
+</html>

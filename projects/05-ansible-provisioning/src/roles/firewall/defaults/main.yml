@@ -1,0 +1,20 @@
+---
+# roles/firewall/defaults/main.yml
+
+# ufw(Debian系)で許可するTCPポート番号。
+# アプリケーションプロファイル名(例: "Nginx Full")ではなくポート番号で指定している。
+# 理由: プロファイル名はnginxパッケージが登録するものなので、
+#       Role実行順序をfirewall→nginxにした場合に「プロファイルが見つからない」
+#       エラーになってしまう(順序に依存しない書き方にするため、あえてポート番号にしている)。
+firewall_allowed_tcp_ports:
+  - 22   # SSH
+  - 80   # HTTP
+  - 443  # HTTPS
+
+# firewalld(RedHat系)で許可するサービス名。
+# firewalldは OS側にあらかじめ登録済みの「サービス定義」(ssh/http/https等)を
+# 指定する方式が標準的なので、こちらはポート番号ではなくサービス名を使う。
+firewall_allowed_services:
+  - ssh
+  - http
+  - https

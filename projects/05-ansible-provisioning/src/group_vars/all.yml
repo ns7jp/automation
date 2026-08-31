@@ -1,0 +1,26 @@
+# group_vars/all.yml
+# 全ホスト共通で使う変数を定義するファイル。
+# Ansibleは "group_vars/<グループ名>.yml" というファイル名を自動的に読み込む仕組みになっており、
+# "all" という特別なグループ名は「すべてのホスト」を意味する。
+#
+# ここで定義した値は roles/*/defaults/main.yml の値より優先される
+# (Ansibleの変数優先順位: group_vars は role の defaults より強い)。
+# 優先順位の詳細は 02-design.md の「変数の優先順位」の節を参照。
+
+# 作業用一般ユーザー名(roles/users で使用)
+deploy_user_name: webadmin
+
+# 上記ユーザーに登録するSSH公開鍵ファイル(このリポジトリ内の相対パス)。
+# 03-build-guide.md Step 3の手順で、各自のSSH公開鍵の中身に差し替えたファイルを
+# ここに用意してから実行すること。ファイルが無い場合は Lookup でエラーになる
+# (このパターンは 04-test-plan.md TC-15を参照)。
+deploy_user_pubkey_file: files/webadmin_id_ed25519.pub
+
+# タイムゾーン設定(roles/common で使用)
+common_timezone: Asia/Tokyo
+
+# テンプレートファイル(*.j2)の中で {{ ansible_managed }} と書くと、
+# 「このファイルは自動生成されたものです」という注意書きを埋め込める(roles/nginx/templates/nginx.conf.j2 で使用)。
+# 以前は ansible.cfg の [defaults] セクションで定義するのが一般的だったが、
+# 現在のAnsibleでは非推奨(deprecated)とされているため、他の変数と同様にここで定義する。
+ansible_managed: "Ansible管理ファイル: このファイルはAnsibleにより自動生成されました。手動で編集しても、次回のPlaybook実行で上書きされます。"

@@ -1,0 +1,18 @@
+# requirements.yml
+# このPlaybookが依存している「Ansible Collection」(=Ansible本体には
+# 含まれていない、追加でインストールする拡張モジュール集)を定義するファイル。
+#
+# 導入コマンド(03-build-guide.md Step 2で実行する):
+#   ansible-galaxy collection install -r requirements.yml
+#
+# これを実行しないと、以下のモジュールが「見つからない」というエラーになる。
+#   - ansible.posix.authorized_key (SSH公開鍵の配置)
+#   - ansible.posix.firewalld      (RHEL系のファイアウォール制御)
+#   - community.general.ufw        (Debian系のファイアウォール制御)
+# (詳しいエラー例は 05-troubleshooting.md Q5を参照)
+
+collections:
+  - name: ansible.posix
+    version: ">=1.5.0"
+  - name: community.general
+    version: ">=7.0.0"

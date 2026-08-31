@@ -1,0 +1,37 @@
+---
+# roles/common/tasks/main.yml
+# common Role: どのサーバーにも共通して行いたい初期設定をまとめる。
+# (パッケージキャッシュ更新 / 共通パッケージ導入 / タイムゾーン設定)
+#
+# タスクは上から順番に1つずつ実行される。1つのタスクが終わってから
+# 次のタスクに進む(並列に実行されるのはホスト単位であって、タスク単位ではない)。
+
+- name: パッケージキャッシュを更新する(Debian/Ubuntu系のみ)
+  ansible.builtin.apt:
+    update_cache: true
+    # 直前1時間以内に更新済みならキャッシュ更新をスキップする。
+    # 実行のたびに毎回 apt update すると時間がかかる上、外部リポジトリへの
+    # 無駄なアクセスも増えるため、ある程度の間隔を空けて更新する。
+    cache_valid_time: 3600
+  when: ansible_facts['os_family'] == "Debian"
+  # ansible_facts はgather_factsで収集した「対象サーバーの情報」が入った辞書。
+  # os_family は "Debian"(Ubuntu/Debian) か "RedHat"(RHEL/AlmaLinux/Rocky等) が入る。
+  # このタスクはAlmaLinux等(RedHat系)では不要なので、Debian系のときだけ実行する。
+
+- name: 共通パッケージをインストールする
+  ansible.builtin.package:
+    # ansible.builtin.package はOSを問わず使える「総称モジュール」。
+    # 実行時にOSを判定し、Debian系ならapt、RedHat系ならdnf/yumを裏側で呼び出してくれる。
+    # そのため、この1つのタスクだけでどちらのOSにも対応できる。
+    name: "{{ common_packages }}"
+    state: present
+
+- name: タイムゾーンをAsia/Tokyoに設定する
+  community.general.timezone:
+    # timezoneモジュールはansible-core本体(ansible.builtin)には含まれておらず、
+    # community.general Collectionが提供している。正式なモジュール名
+    # (FQCN: Fully Qualified Collection Name)で指定している。
+    name: "{{ common_timezone }}"
+  # このタスクは「すでにAsia/Tokyoに設定済みなら何もしない」というべき等な動作をする。
+  # 1回目の実行では changed、2回目以降は ok(変更なし)になるはずで、
+  # これがべき等性(=何度実行しても安全で、結果が同じになる性質)の具体例になる。

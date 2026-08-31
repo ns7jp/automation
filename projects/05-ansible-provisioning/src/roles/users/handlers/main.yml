@@ -1,0 +1,17 @@
+---
+# roles/users/handlers/main.yml
+# Handlerとは「タスクの実行結果がchanged(変更あり)になったときだけ」
+# notifyで呼び出される特別なタスク。
+# 「設定ファイルを書き換えたときだけサービスを再起動したい」というような
+# "変更があった場合限定の後処理" を書くために使う。
+#
+# 重要な性質: Handlerは、notifyされてもすぐには実行されない。
+# 該当するRole(またはPlay)内の通常タスクがすべて終わったあとに、
+# 1回だけまとめて実行される(複数回notifyされても1回にまとめられる)。
+
+- name: Restart sshd
+  ansible.builtin.service:
+    # サービス名がOSによって異なる点に注意。
+    # Debian/Ubuntu系: "ssh" / RHEL/AlmaLinux系: "sshd"
+    name: "{{ 'ssh' if ansible_facts['os_family'] == 'Debian' else 'sshd' }}"
+    state: restarted

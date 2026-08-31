@@ -1,0 +1,72 @@
+---
+# roles/users/tasks/main.yml
+# users Role: 作業用の一般ユーザーを作成し、SSH公開鍵を配置したうえで、
+# パスワード認証とrootの直接ログインを無効化する。
+#
+# ★★★ 重要な注意 ★★★
+# パスワード認証を無効化する2つのタスクには tags: [ssh_lockdown] を付けている。
+# これらを実行する前に、必ず新しいユーザー(webadmin)の鍵ログインが
+# 成功することを別のターミナルで確認すること。
+# 確認せずに実行すると、サーバーに一切ログインできなくなる恐れがある
+# (詳しい安全な手順は 03-build-guide.md Step 8〜9、
+#  ハマった場合の対処は 05-troubleshooting.md Q4を参照)。
+
+- name: 管理者グループ名をOSファミリーに応じて決定する
+  ansible.builtin.set_fact:
+    sudo_group: "{{ sudo_group_map[ansible_facts['os_family']] }}"
+  # set_fact はタスクの中で新しい変数(Fact)をその場で作るためのモジュール。
+  # ここでは「Debianならsudo、RedHatならwheel」という辞書(sudo_group_map)から
+  # 実際のOSに合う値を選び、sudo_group という変数に入れている。
+
+- name: 作業用一般ユーザーを作成する
+  ansible.builtin.user:
+    name: "{{ deploy_user_name }}"
+    groups: "{{ sudo_group }}"
+    append: true          # 既存の所属グループを消さず、追加だけする
+    shell: /bin/bash
+    create_home: true
+    state: present
+  # このタスクはべき等: 既にユーザーが存在し設定も同じなら "ok" のまま変化しない。
+  # 逆に、存在しなければ作成され "changed" になる。
+
+- name: SSH公開鍵を配置する
+  ansible.posix.authorized_key:
+    user: "{{ deploy_user_name }}"
+    state: present
+    key: "{{ lookup('file', deploy_user_pubkey_file) }}"
+  # lookup('file', ...) は「コントロールノード側のファイルの中身を読み込んで、
+  # その場に展開する」というJinja2の関数(lookupプラグイン)。
+  # ここでは deploy_user_pubkey_file に指定した公開鍵ファイルの中身を読み込み、
+  # 対象サーバーの ~webadmin/.ssh/authorized_keys に追記している。
+
+- name: パスワード無しでsudoできるようにする
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/{{ deploy_user_name }}"
+    content: "{{ deploy_user_name }} ALL=(ALL) NOPASSWD:ALL\n"
+    mode: "0440"
+    # validate: 書き込む「前」に、生成される内容を一時ファイルに書き出してチェックしてから
+    # 本番のファイルに反映する仕組み。%s の部分がその一時ファイルのパスに置き換わる。
+    # sudoers ファイルの文法が壊れると sudo コマンド自体が使えなくなり大事故になるため、
+    # visudo の文法チェック機能(-c)を通してから反映する。
+    validate: "visudo -cf %s"
+
+- name: sshd_configでパスワード認証を無効化する
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication"
+    line: "PasswordAuthentication no"
+    # sshd自身が持つ文法チェック機能(-t)で、書き換え後の内容が正しいsshd_configに
+    # なっているかを事前に確認してから反映する。sshdの設定ミスはsudoers同様に
+    # サーバーへ入れなくなる重大事故につながるため、必ずvalidateを入れる。
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart sshd
+  tags: [ssh_lockdown]
+
+- name: sshd_configでrootの直接ログインを無効化する
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PermitRootLogin"
+    line: "PermitRootLogin no"
+    validate: "/usr/sbin/sshd -t -f %s"
+  notify: Restart sshd
+  tags: [ssh_lockdown]

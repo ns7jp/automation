@@ -1,0 +1,11 @@
+# group_vars/webservers.yml
+# "webservers" グループ(inventory/hosts.iniで定義)に属するホストにのみ
+# 適用される変数。今回は全ホストがwebserversグループなので実質全体に効くが、
+# 将来的に「DBサーバー用グループ」等を追加したときに、Web関連の変数だけを
+# ここに書き分けられるようにするための構成。
+
+# 公開するサイトのタイトル(roles/nginx の index.html.j2 で使用)
+nginx_site_title: "Sample Web Service (Provisioned by Ansible)"
+
+# Nginxがリッスンするポート番号
+nginx_listen_port: 80

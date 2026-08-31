@@ -1,0 +1,14 @@
+---
+# roles/users/defaults/main.yml
+
+# 作成する作業用一般ユーザーの名前
+deploy_user_name: webadmin
+
+# 上記ユーザーに登録するSSH公開鍵ファイル(リポジトリルートからの相対パス)
+deploy_user_pubkey_file: files/webadmin_id_ed25519.pub
+
+# 管理者権限グループの名前はOSファミリーによって異なる。
+# Debian/Ubuntu系は "sudo" グループ、RHEL/AlmaLinux系は "wheel" グループが標準。
+sudo_group_map:
+  Debian: sudo
+  RedHat: wheel

@@ -1,0 +1,29 @@
+---
+# site.yml
+# このプロジェクトの「入口」となるPlaybook。
+# 実行するとwebserversグループの全ホストに対して、
+# common → users → firewall → nginx の順にRoleを適用する。
+#
+# 実行コマンド(コントロールノードのsrc/ディレクトリで):
+#   ansible-playbook site.yml            # 本適用
+#   ansible-playbook site.yml --check --diff   # dry run(何が変わるかだけ確認)
+#
+# --tags / --skip-tags でRole単位・タスク単位の部分実行もできる。
+# 例: ユーザー作成だけ先に試したい場合
+#   ansible-playbook site.yml --tags "common,users" --skip-tags "ssh_lockdown"
+# (この理由は 03-build-guide.md Step 8〜9、05-troubleshooting.md Q4を参照)
+
+- name: Webサーバーの初期構築を自動化する(共通設定 / ユーザー / ファイアウォール / Nginx)
+  hosts: webservers
+  become: true        # 各タスクをroot権限(sudo)で実行する
+  gather_facts: true  # OS種別やホスト名などの情報(Facts)を事前に収集する
+
+  roles:
+    - role: common
+      tags: [common]
+    - role: users
+      tags: [users]
+    - role: firewall
+      tags: [firewall]
+    - role: nginx
+      tags: [nginx]

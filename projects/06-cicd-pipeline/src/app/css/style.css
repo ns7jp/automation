@@ -1,0 +1,82 @@
+/*
+ * style.css
+ * 案件No.6: CI/CD自動デプロイパイプライン - 検証用サンプルサイトのスタイル
+ *
+ * 動作確認のしやすさを優先した、装飾を最小限にとどめたシンプルなCSS。
+ * デプロイの成否は「このCSSが反映されて見た目が変わったかどうか」でも
+ * 目視確認できる(03-build-guide.mdのStep 9参照)。
+ */
+
+:root {
+  --color-bg: #f5f7fa;
+  --color-header-bg: #1f2937;
+  --color-header-text: #ffffff;
+  --color-card-bg: #ffffff;
+  --color-border: #d0d7de;
+  --color-text: #24292f;
+  --color-accent: #2563eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.7;
+}
+
+.site-header {
+  background-color: var(--color-header-bg);
+  color: var(--color-header-text);
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.site-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 1.6rem;
+}
+
+.site-header p {
+  margin: 0;
+  opacity: 0.85;
+  font-size: 0.9rem;
+}
+
+main {
+  max-width: 720px;
+  margin: 32px auto;
+  padding: 0 16px;
+}
+
+.card {
+  background-color: var(--color-card-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.card h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+  color: var(--color-accent);
+}
+
+code {
+  background-color: #eef2f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+footer {
+  text-align: center;
+  padding: 16px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
