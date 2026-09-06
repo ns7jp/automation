@@ -49,8 +49,10 @@ hint "手動実行のトリガーです。値は不要なので workflow_dispatc
 assert_file_contains "$TARGET" '^[[:space:]]*workflow_dispatch:[[:space:]]*$' \
     "workflow_dispatch トリガーを定義して手動実行できるようにする"
 
+BRANCHES_RE='^[[:space:]]*branches:[[:space:]]*\[[[:space:]]*main[[:space:]]*\][[:space:]]*$'
+
 hint "対象ブランチの指定です。branches: [ main ] と、角括弧を使ったリストで書きます。"
-assert_file_contains "$TARGET" '^[[:space:]]*branches:[[:space:]]*\[[[:space:]]*main[[:space:]]*\][[:space:]]*$' \
+assert_file_contains "$TARGET" "$BRANCHES_RE" \
     "branches: [ main ] で main ブランチを対象にする"
 
 #-------------------------------------------------------------------------------
@@ -60,16 +62,20 @@ hint "ジョブを並べる前に jobs: という行が必要です。行頭に�
 assert_file_contains "$TARGET" '^jobs:[[:space:]]*$' "jobs: でジョブの並びを始める"
 
 # ジョブが2つあること(test と deploy)を、runs-on の行数で確認する。
-RUNS_ON_COUNT="$(grep -cE '^[[:space:]]*runs-on:[[:space:]]*ubuntu-latest[[:space:]]*$' "$TARGET" || true)"
+RUNS_ON_RE='^[[:space:]]*runs-on:[[:space:]]*ubuntu-latest[[:space:]]*$'
+RUNS_ON_COUNT="$(grep -cE "$RUNS_ON_RE" "$TARGET" || true)"
 
-hint "test ジョブと deploy ジョブの両方に runs-on: ubuntu-latest が必要です。ジョブごとに別々のランナー(仮想マシン)を借りるため、1つにまとめることはできません。"
-assert_eq "2" "$RUNS_ON_COUNT" "test と deploy の2つのジョブに runs-on: ubuntu-latest を書く"
+hint "test ジョブと deploy ジョブの両方に runs-on: ubuntu-latest が必要です。ジョブごとに別のランナー(仮想マシン)を借りるためです。"
+assert_eq "2" "$RUNS_ON_COUNT" \
+    "test と deploy の2つのジョブに runs-on: ubuntu-latest を書く"
 
 # checkout も同じ理由で2回必要になる。
-CHECKOUT_COUNT="$(grep -cE '^[[:space:]]*-[[:space:]]*uses:[[:space:]]*actions/checkout@v4[[:space:]]*$' "$TARGET" || true)"
+CHECKOUT_RE='^[[:space:]]*-[[:space:]]*uses:[[:space:]]*actions/checkout@v4[[:space:]]*$'
+CHECKOUT_COUNT="$(grep -cE "$CHECKOUT_RE" "$TARGET" || true)"
 
-hint "ジョブごとにランナーはまっさらな状態から始まるため、deploy ジョブでも改めて - uses: actions/checkout@v4 が必要です。@v4 のバージョン指定も忘れずに書いてください。"
-assert_eq "2" "$CHECKOUT_COUNT" "両方のジョブの先頭で actions/checkout@v4 を呼び出す"
+hint "ジョブごとにランナーはまっさらな状態から始まります。deploy ジョブでも改めて - uses: actions/checkout@v4 が必要です。@v4 の指定も忘れずに。"
+assert_eq "2" "$CHECKOUT_COUNT" \
+    "両方のジョブの先頭で actions/checkout@v4 を呼び出す"
 
 #-------------------------------------------------------------------------------
 describe "deploy ジョブ: いつ配布してよいかの条件"
@@ -91,8 +97,8 @@ assert_file_contains "$TARGET" '\$\{\{[[:space:]]*secrets\.SSH_PRIVATE_KEY[[:spa
 
 # 配布先のユーザー名とホスト名の2種類が Secrets 経由になっているか。
 # 同じ行に並べて書かれることがあるため、行数ではなく出現した種類の数を数える。
-DEPLOY_SECRETS="$(grep -oE '\$\{\{[[:space:]]*secrets\.DEPLOY_(USER|HOST)[[:space:]]*\}\}' "$TARGET" \
-    | sed -E 's/[^A-Z_]//g' | sort -u | wc -l)"
+DEPLOY_RE='\$\{\{[[:space:]]*secrets\.DEPLOY_(USER|HOST)[[:space:]]*\}\}'
+DEPLOY_SECRETS="$(grep -oE "$DEPLOY_RE" "$TARGET" | sed -E 's/[^A-Z_]//g' | sort -u | wc -l)"
 
 hint "配布先も秘密情報として扱います。\${{ secrets.DEPLOY_USER }} と \${{ secrets.DEPLOY_HOST }} の2種類を参照してください。"
 assert_eq "2" "$DEPLOY_SECRETS" "配布先を secrets.DEPLOY_USER と secrets.DEPLOY_HOST から受け取る"
