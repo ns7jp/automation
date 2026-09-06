@@ -233,4 +233,4 @@ SERVER_NAME="$1"
 - 使い方の表示(`usage` 関数)→ 同スクリプトの `usage()`
 - 終了ステータスによる成否通知 → 同スクリプト末尾の `exit 0` / `exit 1`
 
-次は [ex02: 入力ファイルの検証](../ex02-input-validation/README.md) に進んでください。
+次は [ex02: 入力チェックと安全装置](../ex02-input-validation/README.md) に進んでください。

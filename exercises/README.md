@@ -68,6 +68,14 @@ nano ex01-server-info/work/server_info.sh
 | ex03 | [CSVを1行ずつ処理する](ex03-csv-loop/README.md) | ★★☆☆☆ | 50分 | while read / IFS / パラメータ展開 / プロセス置換 |
 | ex04 | [ログ関数と実行記録](ex04-log-function/README.md) | ★★☆☆☆ | 45分 | 関数 / local / date書式 / tee -a / カウンタ変数 |
 | ex05 | [オプション解析とドライラン](ex05-getopts-dryrun/README.md) | ★★☆☆☆ | 50分 | getopts / OPTARG / 長いオプションの変換 / ドライラン / グロブ |
+| ex06 | [総合演習: ユーザー一括作成ミニ版](ex06-mini-useradd/README.md) | ★★☆☆☆ | 90分 | ex01〜ex05の総合 / root権限チェック / べき等性 / ドライラン |
+
+### ステージ2: バックアップと定期実行
+
+| No. | 演習 | 難易度 | 目安 | 身につく力 |
+|---|---|---|---|---|
+| ex07 | [tarでバックアップを作る](ex07-tar-archive/README.md) | ★★☆☆☆ | 45分 | tar czf / -C と相対パス / --exclude / du -h / 終了ステータスの判定 |
+| ex08 | [世代管理(古い世代の削除)](ex08-rotate-generations/README.md) | ★★★☆☆ | 50分 | find -printf と sort / 安全な削除対象の絞り込み / 数値チェック / ドライラン |
 
 <!-- END:EXERCISE-INDEX -->
 

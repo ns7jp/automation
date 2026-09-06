@@ -256,7 +256,8 @@ assert_status 0 "正常なCSVを処理できる"
 | 症状 | 確認すること |
 |---|---|
 | `./check.sh: Permission denied` | `bash check.sh 01` で実行するか、`chmod +x check.sh` を実行する |
-| `演習ディレクトリが見つかりません` | `exercises` ディレクトリの中で実行しているか確認する |
+| `./check.sh: No such file or directory` | `exercises` ディレクトリの中にいるか確認する。別の場所から実行するときは `bash /path/to/exercises/check.sh 01` のようにパスを指定する |
+| `演習ディレクトリ(ex01-... 形式)が見つかりません` | `check.sh` と同じ階層に `exNN-*` ディレクトリが無い。リポジトリを正しく取得できているか確認する(`check.sh` はスクリプト自身の位置を基準に演習を探すため、どのディレクトリから呼んでもこのエラーにはならない) |
 | 採点が20秒で止まる | 採点対象に無限ループがある。`while` の終了条件や `tail -f` の使い方を確認する |
 | 何が起きたか詳しく見たい | `KEEP_WORKDIR=1 ./check.sh 07` で作業ディレクトリを残して中身を確認する |
 | テストの中身を読みたい | `cat exNN-*/tests/test.sh` を読む。**テストは仕様書そのものです** |
