@@ -66,6 +66,8 @@ nano ex01-server-info/work/server_info.sh
 | ex01 | [サーバー情報表示スクリプト](ex01-server-info/README.md) | ★☆☆☆☆ | 30分 | 変数 / コマンド置換 / 引数チェック / 終了ステータス |
 | ex02 | [入力チェックと安全装置](ex02-input-validation/README.md) | ★☆☆☆☆ | 40分 | 条件分岐 / ファイル判定 / 権限チェック |
 | ex03 | [CSVを1行ずつ処理する](ex03-csv-loop/README.md) | ★★☆☆☆ | 50分 | while read / IFS / パラメータ展開 / プロセス置換 |
+| ex04 | [ログ関数と実行記録](ex04-log-function/README.md) | ★★☆☆☆ | 45分 | 関数 / local / date書式 / tee -a / カウンタ変数 |
+| ex05 | [オプション解析とドライラン](ex05-getopts-dryrun/README.md) | ★★☆☆☆ | 50分 | getopts / OPTARG / 長いオプションの変換 / ドライラン / グロブ |
 
 <!-- END:EXERCISE-INDEX -->
 

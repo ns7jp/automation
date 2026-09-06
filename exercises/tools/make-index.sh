@@ -47,8 +47,14 @@ build_table() {
 
     for dir in "$EX_ROOT"/ex[0-9][0-9]-*/; do
         [[ -f "${dir}meta.env" ]] || continue
-        EX_ID=""; EX_TITLE=""; EX_STAGE=""; EX_STAGE_NAME=""
-        EX_LEVEL=""; EX_TIME=""; EX_SKILL=""; EX_PROJECT=""; EX_TARGET=""
+        # meta.env の全項目を初期化する(EX_PROJECT などは表には使わないが、
+        # 前の演習の値が残らないよう毎回リセットする)
+        EX_ID=""; EX_TITLE=""; EX_STAGE=""; EX_STAGE_NAME=""; EX_LEVEL=""
+        EX_TIME=""; EX_SKILL=""
+        # shellcheck disable=SC2034
+        EX_PROJECT=""
+        # shellcheck disable=SC2034
+        EX_TARGET=""
         # shellcheck source=/dev/null
         source "${dir}meta.env"
 
