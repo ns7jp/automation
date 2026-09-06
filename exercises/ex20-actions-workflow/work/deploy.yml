@@ -1,0 +1,70 @@
+# =====================================================================
+# deploy.yml
+# ex20: GitHub Actionsワークフローを書く(あなたが完成させるファイル)
+#
+# 課題の詳細は ../README.md を読んでください。
+# TODO と書かれた場所に設定を書き、書き終えたら TODO を含む行はすべて消してください。
+# この案内文の行も TODO を含むので、一緒に消すのを忘れずに。
+#
+# 採点: exercises ディレクトリで ./check.sh 20
+#
+# YAMLの書式ルール(YAMLは「見た目」がそのまま意味になる言語です)
+#   - インデントは半角スペース2つ。タブは絶対に使えない
+#   - 行頭の「- 」はリストの1要素という意味
+#   - 「キー: 値」のコロンの後ろには半角スペースを1つ入れる
+#   - # で始まる行はコメント
+#   - 記号はすべて半角。全角のコロンやスペースが混ざると読み込めない
+#
+# 書き終えたら、まず次のコマンドでYAMLとして読めるか確かめると早いです。
+#   python3 -c 'import yaml,sys; yaml.safe_load(open(sys.argv[1]))' \
+#     ex20-actions-workflow/work/deploy.yml
+# =====================================================================
+
+# TODO 1: ワークフローの名前を付ける
+#   キー: name  値: deploy
+#   ヒント: インデントなし(行頭)で書く一番外側のキー
+
+
+# TODO 2: いつ動かすか(トリガー)を書く
+#   キー: on  値は書かず、下に3つのトリガーを2スペース下げて並べる
+#     - push          : その下にさらに2スペース下げて branches: [ main ]
+#     - pull_request  : 同じく branches: [ main ]
+#     - workflow_dispatch : 値は書かない。キーとコロンだけの行にする
+#   ヒント: 手動実行のトリガーは値が不要なので「キー:」だけで完成
+
+
+# TODO 3: jobs: と書き、その下に2つのジョブを2スペース下げて並べる
+#
+#   ジョブ1「test」(CI: 変更が壊れていないか確かめる)
+#     - どのOSで動かすか   : キー runs-on 、値 ubuntu-latest
+#     - steps: の下に、次の3ステップをこの順で「- 」で並べる
+#         (1) uses: actions/checkout@v4
+#             ... 既製の部品を呼び出してリポジトリを持ってくる
+#         (2) name: shellcheck で静的解析する
+#             run: shellcheck scripts/*.sh
+#         (3) name: テストを実行する
+#             run: bash scripts/test.sh
+#
+#   ジョブ2「deploy」(CD: 検査に通ったものだけをサーバーへ配る)
+#     - needs   : test  (test が成功しないと動かさない)
+#     - if      : github.ref == 'refs/heads/main'
+#                 (main ブランチのときだけ動かす)
+#     - runs-on : ubuntu-latest
+#     - steps: の下に、次の3ステップをこの順で並べる
+#         (1) uses: actions/checkout@v4
+#         (2) name: SSH秘密鍵を配置する
+#             run: | を使って複数行のコマンドを書く。やることは3つ。
+#               a. mkdir -p ~/.ssh でディレクトリを用意する
+#               b. Secrets の SSH_PRIVATE_KEY を ~/.ssh/id_ed25519 に書き出す
+#                  ヒント: 秘密の値は ${{ secrets.名前 }} という書き方で埋め込む
+#               c. 書き出した鍵ファイルの権限を 600 に変える
+#                  ヒント: 権限を変えるコマンドは chmod
+#         (3) name: rsync で配布する
+#             run: | を使って rsync を実行する。
+#               rsync -avz --delete \
+#                 -e "ssh -o StrictHostKeyChecking=no" \
+#                 app/ "配布先"
+#             配布先のユーザー名は Secrets の DEPLOY_USER 、
+#             ホスト名は Secrets の DEPLOY_HOST から受け取り、
+#               ユーザー名@ホスト名:/var/www/html/
+#             の形に組み立てる

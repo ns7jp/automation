@@ -76,6 +76,39 @@ nano ex01-server-info/work/server_info.sh
 |---|---|---|---|---|
 | ex07 | [tarでバックアップを作る](ex07-tar-archive/README.md) | ★★☆☆☆ | 45分 | tar czf / -C と相対パス / --exclude / du -h / 終了ステータスの判定 |
 | ex08 | [世代管理(古い世代の削除)](ex08-rotate-generations/README.md) | ★★★☆☆ | 50分 | find -printf と sort / 安全な削除対象の絞り込み / 数値チェック / ドライラン |
+| ex09 | [失敗時のWebhook通知](ex09-webhook-notify/README.md) | ★★★☆☆ | 50分 | 環境変数で秘密情報を渡す / JSONの組み立てとエスケープ / curl でのPOST |
+| ex10 | [cron定義を書く](ex10-cron-schedule/README.md) | ★★☆☆☆ | 40分 | cronの5フィールド / */5 と 1-5 の書き方 / 絶対パスで書く理由 |
+
+### ステージ3: ログ監視と常駐化
+
+| No. | 演習 | 難易度 | 目安 | 身につく力 |
+|---|---|---|---|---|
+| ex11 | [正規表現でログを検知する](ex11-log-grep/README.md) | ★★☆☆☆ | 45分 | grep -E / 除外パターン / 件数の数え方 / 監視スクリプトの終了ステータス |
+| ex12 | [状態ファイルで通知を抑止する](ex12-throttle-state/README.md) | ★★★☆☆ | 55分 | 状態ファイル / epoch秒と算術式 / 数値の妥当性チェック / 防御的な既定値 |
+| ex13 | [前回の続きから読む(差分処理)](ex13-offset-tail/README.md) | ★★★☆☆ | 60分 | 状態ファイル / tail -n +N / wc -l / ログローテート検知 |
+| ex14 | [systemdユニットを書く](ex14-systemd-unit/README.md) | ★★★☆☆ | 45分 | systemdユニットの3セクション / Type=simple / Restart=always / WantedBy |
+
+### ステージ4: 死活監視と状態管理
+
+| No. | 演習 | 難易度 | 目安 | 身につく力 |
+|---|---|---|---|---|
+| ex15 | [複数台をまとめて監視する](ex15-multi-target-check/README.md) | ★★★☆☆ | 60分 | 設定ファイルの読み込み / case による分岐 / ping と curl / 集計と終了ステータス |
+| ex16 | [連続失敗しきい値と復旧通知](ex16-flapping-guard/README.md) | ★★★☆☆ | 60分 | 状態ファイルの読み書き / 状態遷移の設計 / しきい値判定 / 復旧通知 |
+| ex17 | [awkで稼働率を集計する](ex17-awk-report/README.md) | ★★★☆☆ | 55分 | awk / 連想配列による集計 / printf の桁ぞろえ / sort との組み合わせ |
+
+### ステージ5: IaC(Ansible)
+
+| No. | 演習 | 難易度 | 目安 | 身につく力 |
+|---|---|---|---|---|
+| ex18 | [Playbookを完成させる](ex18-ansible-playbook/README.md) | ★★★★☆ | 60分 | YAMLの書き方 / play と task の構造 / モジュールと引数 / handlers と notify |
+| ex19 | [べき等なタスクに書き換える](ex19-idempotent-tasks/README.md) | ★★★★☆ | 60分 | べき等性 / 専用モジュールへの置き換え / changed_when と creates |
+
+### ステージ6: CI/CD
+
+| No. | 演習 | 難易度 | 目安 | 身につく力 |
+|---|---|---|---|---|
+| ex20 | [GitHub Actionsワークフローを書く](ex20-actions-workflow/README.md) | ★★★★☆ | 60分 | ワークフローの構造 / uses と run / needs と if / Secrets |
+| ex21 | [CIで動かすテストスクリプト](ex21-ci-test-script/README.md) | ★★★★☆ | 60分 | テストの関数化と集計 / command -v / 終了ステータス / スキップと失敗の区別 |
 
 <!-- END:EXERCISE-INDEX -->
 
