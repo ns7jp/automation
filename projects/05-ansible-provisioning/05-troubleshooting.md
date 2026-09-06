@@ -193,7 +193,7 @@ ls -l /etc/nginx/sites-enabled/
 ```
 
 ```text
-（何も表示されなければ正常。defaultファイルが残っていたら手動で確認する)
+(何も表示されなければ正常。defaultファイルが残っていたら手動で確認する)
 ```
 
 なお、AlmaLinux系のnginxパッケージにはこの`sites-enabled`という仕組み自体が無いため、このエラーはUbuntu/Debian系でのみ発生しうる。

@@ -1,0 +1,50 @@
+---
+# =====================================================================
+# tasks.yml
+# ex19: べき等なタスクに書き換える(あなたが完成させるファイル)
+#
+# 課題の詳細は ../README.md を読んでください。
+# 下の5つのタスクは、すべて shell / command モジュールで書かれた「悪い例」です。
+# TODO のとおりに専用モジュールへ書き換え、書き終えたら TODO を含む行はすべて消してください。
+# この案内文の行も TODO を含むので、一緒に消すのを忘れずに。
+#
+# 採点: exercises ディレクトリで ./check.sh 19
+#
+# YAMLの書式ルール
+#   - インデントは半角スペース2つ。タブは絶対に使えない
+#   - 行頭の「- 」はリストの1要素という意味
+#   - 「キー: 値」のコロンの後ろには半角スペースを1つ入れる
+#   - 記号はすべて半角。全角のコロンやスペースが混ざると読み込めない
+#
+# このファイルは「タスクのリスト」だけを書いたファイル。
+# 案件では roles/<Role名>/tasks/main.yml がこの形になっている。
+# =====================================================================
+
+# TODO 1: ansible.builtin.user モジュールに書き換える
+#   引数: name: webadmin / shell: /bin/bash / create_home: true / state: present
+- name: ユーザーを作成する
+  ansible.builtin.shell: useradd -m webadmin
+
+# TODO 2: ansible.builtin.file モジュールに書き換える
+#   引数: path: /opt/app / state: directory / owner: root / group: root / mode: "0755"
+- name: アプリ用ディレクトリを作成する
+  ansible.builtin.shell: mkdir -p /opt/app
+
+# TODO 3: ansible.builtin.lineinfile モジュールに書き換える
+#   引数: path: /etc/ssh/sshd_config
+#         regexp: "^#?PermitRootLogin"
+#         line: "PermitRootLogin no"
+#         state: present
+#   regexp に一致する行があれば置き換え、無ければ追記する、という動きになる
+- name: SSHの設定を追記する
+  ansible.builtin.shell: echo "PermitRootLogin no" >> /etc/ssh/sshd_config
+
+# TODO 4: ansible.builtin.service モジュールに書き換える
+#   引数: name: nginx / state: started / enabled: true
+- name: nginx を起動する
+  ansible.builtin.command: systemctl start nginx
+
+# TODO 5: ansible.builtin.apt モジュールに書き換える
+#   引数: name: curl / state: present
+- name: curl をインストールする
+  ansible.builtin.shell: apt-get install -y curl

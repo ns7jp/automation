@@ -1,0 +1,54 @@
+#===============================================================================
+# 演習パックの自動検証ワークフロー
+#
+# 目的:
+#   exercises/ の演習パックが「動くはず」ではなく「動くことを確認した」状態を
+#   常に保つ。push と pull request のたびに次を自動で確認する。
+#
+#     1. すべての解答例が採点テストに合格すること
+#     2. すべてのシェルスクリプトに構文エラーが無いこと
+#     3. パック自身のコードが静的解析(shellcheck)を通ること
+#     4. README.md の演習一覧が meta.env と一致していること
+#
+# このワークフロー自体が、演習 ex20(GitHub Actions)の実例にもなっている。
+#===============================================================================
+name: exercises-check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    name: 演習パックの自動検証
+    runs-on: ubuntu-latest
+    env:
+      # 日本語を含むファイルを shellcheck が扱えるようにする
+      LC_ALL: C.UTF-8
+    steps:
+      - name: リポジトリを取得する
+        uses: actions/checkout@v4
+
+      - name: 解答例がすべて採点テストに合格することを確認する
+        run: bash exercises/check.sh --answer
+
+      - name: 構文チェックと静的解析を実行する
+        run: bash exercises/tools/lint.sh
+
+      - name: 演習一覧が meta.env と一致していることを確認する
+        run: bash exercises/tools/make-index.sh --check
+
+      - name: 雛形が未完成のままかどうかを確認する(参考情報)
+        # work/ は学習者が編集する場所。このリポジトリ本体では未完成のままが正しい。
+        # 学習者が自分のフォークに解答をpushした場合はここが「合格」になるが、
+        # それは問題ではないため、結果は情報として出すだけにしている。
+        continue-on-error: true
+        run: |
+          if bash exercises/check.sh > /dev/null 2>&1; then
+            echo "注意: work/ の雛形がすべて合格しています(学習者のフォークであれば正常です)。"
+          else
+            echo "OK: work/ は未完成の雛形のままです。"
+          fi

@@ -1,0 +1,71 @@
+# =====================================================================
+# log-watch-alert.service
+# ex14: systemdユニットを書く(あなたが完成させるファイル)
+#
+# 課題の詳細は ../README.md を読んでください。
+# TODO と書かれた場所に設定を1行ずつ書き、TODO の行は消してください。
+#
+# 採点: exercises ディレクトリで ./check.sh 14
+#
+# 配置先(実サーバーの場合): /etc/systemd/system/log-watch-alert.service
+# 書式: セクション見出しは [Unit] のように行頭から書く。
+#       設定は キー=値 の形で書き、= の前後に空白を入れない。
+#       # で始まる行はコメント。
+# =====================================================================
+
+[Unit]
+# TODO 1: サービスの説明を書く
+#   値: ログ監視・異常検知アラート通知サービス
+#   ヒント: キーは Description
+
+
+# TODO 2: ネットワークが使えるようになったあとに起動するよう、順序を指定する
+#   値: network-online.target
+#   ヒント: キーは After
+
+
+# TODO 3: そのネットワークの準備処理も一緒に動かしたい、という依存を指定する
+#   値: network-online.target
+#   ヒント: キーは Wants 。After だけでは「順序」しか指定できない
+
+
+[Service]
+# TODO 4: 起動したプロセスが動き続けること自体をサービスとみなすモードにする
+#   ヒント: キーは Type 、値は simple
+
+
+# TODO 5: 実行するスクリプトを絶対パスで指定する
+#   値: /opt/scripts/log-watch-alert.sh
+#   ヒント: キーは ExecStart 。相対パスは使えない
+
+
+# TODO 6: 設定ファイルを環境変数として読み込む。ただしファイルが無くても起動させる
+#   値: /etc/default/log-watch-alert
+#   ヒント: キーは EnvironmentFile 。パスの直前に - を付けると
+#           「ファイルが無くてもエラーにしない」という意味になる
+
+
+# TODO 7: プロセスが終了したら、常に自動で再起動する
+#   ヒント: キーは Restart 、値は always
+
+
+# TODO 8: 再起動するまでの待ち時間を10秒にする
+#   ヒント: キーは RestartSec 、値は 10(単位を書かなければ秒)
+
+
+# TODO 9: 実行ユーザーを root にする
+#   ヒント: キーは User
+
+
+# TODO 10: 標準出力を journald(systemdのログ収集の仕組み)へ送る
+#   ヒント: キーは StandardOutput 、値は journal
+
+
+# TODO 11: 標準エラー出力も journald へ送る
+#   ヒント: キーは StandardError 、値は journal
+
+
+[Install]
+# TODO 12: systemctl enable したときに、通常のマルチユーザー起動の一員として
+#          登録されるようにする(=サーバー再起動後も自動起動する)
+#   ヒント: キーは WantedBy 、値は multi-user.target
