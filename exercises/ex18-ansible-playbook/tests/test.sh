@@ -75,7 +75,7 @@ hint "配置先は絶対パスで書きます。dest: /etc/nginx/nginx.conf で�
 assert_file_contains "$TARGET" '^[[:space:]]*dest:[[:space:]]*/etc/nginx/nginx\.conf[[:space:]]*$' \
     "template に dest: /etc/nginx/nginx.conf を指定する"
 
-hint "mode の値はクォートで囲みます。mode: \"0644\" と書いてください。囲まないと 0644 が10進数の644として読み込まれます。"
+hint "mode の値はクォートで囲みます。mode: \"0644\" と書いてください。クォートの無い 644 はYAMLが10進数として読み込み、意図しない権限になります。"
 assert_file_contains "$TARGET" "^[[:space:]]*mode:[[:space:]]*[\"']0644[\"'][[:space:]]*\$" \
     "template の mode を \"0644\" とクォートして指定する"
 

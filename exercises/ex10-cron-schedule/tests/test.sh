@@ -13,9 +13,20 @@ source "${EX_LIB}/harness.sh"
 
 require_target
 
-# コメント行(# で始まる行)と、実行行(数字または * で始まる行)の数を数えておく
-COMMENT_COUNT="$(grep -c '^[[:space:]]*#' "$TARGET" || true)"
+# 実行行(数字または * で始まる行)の数を数えておく
 JOB_COUNT="$(grep -Ec '^[0-9*]' "$TARGET" || true)"
+
+# 「直前に説明コメントが書かれている実行行」の数を数える。
+#   雛形のヘッダーにも # で始まる行があるため、単純にコメント行を数えるだけでは
+#   何も書かなくても合格してしまう。そこで「実行行の1つ上が # で始まる行か」を見る。
+#   コメントと実行行の間に空行があってもよいものとして数える。
+COMMENTED_JOBS="$(awk '
+    /^[[:space:]]*#/  { commented = 1; next }
+    /^[[:space:]]*$/  { next }
+    /^[0-9*]/         { if (commented) n++; commented = 0; next }
+                      { commented = 0 }
+    END { print n + 0 }
+' "$TARGET")"
 
 # ファイルの最後の1文字。改行で終わっていれば、変数展開の結果は空になる
 LAST_CHAR="$(tail -c 1 "$TARGET")"
@@ -29,8 +40,9 @@ assert_file_not_contains "$TARGET" "TODO" "雛形の TODO 行が残っていな�
 hint "実行する行は MAILTO を除いて4行です。分 時 日 月 曜日 コマンド の形で書きます。"
 assert_cmd "cron の実行行を4行書く (現在 ${JOB_COUNT} 行)" test "$JOB_COUNT" -eq 4
 
-hint "実行行の直前に「何をいつ実行するか」を日本語で書いた # で始まる行を入れてください。"
-assert_cmd "説明のコメント行を4行以上書く (現在 ${COMMENT_COUNT} 行)" test "$COMMENT_COUNT" -ge 4
+hint "4つの実行行それぞれの直前の行に「何をいつ実行するか」を日本語で書いた # で始まる行を入れてください(コメントと実行行の間に空行が入るのはかまいません)。"
+assert_cmd "4つの実行行それぞれの直前に説明コメント行を書く (現在 ${COMMENTED_JOBS} 行)" \
+    test "$COMMENTED_JOBS" -ge 4
 
 hint "cron の設定ファイルは最終行も改行で終わっている必要があります。行末で改行してください。"
 assert_cmd "ファイルの最後が改行で終わっている" test -z "$LAST_CHAR"

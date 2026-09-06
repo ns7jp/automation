@@ -6,7 +6,7 @@
 | 難易度 | ★★★☆☆ |
 | 目安時間 | 50分 |
 | 身につく力 | 環境変数で秘密情報を渡す / JSONの組み立てとエスケープ / curl でのPOST |
-| 対応する案件 | [案件No.2 バックアップ自動化](../../projects/02-backup-automation/README.md) |
+| 対応する案件 | [案件No.2 定期バックアップ自動化](../../projects/02-backup-automation/README.md) |
 | 作業するファイル | `work/notify.sh` |
 
 ---
@@ -169,12 +169,15 @@ $ ./notify.sh failure "バックアップに失敗しました"
 WEBHOOK_URL が未設定のため通知をスキップします
 
 $ ./notify.sh
+エラー: 引数は2つ必要です。
 使い方: notify.sh <success|failure> <メッセージ>
   実行結果を Webhook (Slackなど) へ通知します。
   送信先は環境変数 WEBHOOK_URL で指定します。
 $ echo $?
 1
 ```
+
+- 引数エラーのときの1行目 (`エラー: ...`) は自由な文言でかまいません。採点で見ているのは、標準エラー出力に「使い方」を含む行が出ていることと、終了ステータスが `1` であることの2点です
 
 ---
 

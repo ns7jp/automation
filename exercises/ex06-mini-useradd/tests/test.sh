@@ -21,6 +21,7 @@ cat > users.csv <<'CSV_EOF'
 氏名,ユーザー名,部署,初期パスワード
 山田 太郎,yamada_t,sales,InitPass01
 佐藤 花子,sato_h,sales,InitPass02
+
 鈴木 一郎,suzuki_i,dev,InitPass03
 CSV_EOF
 
@@ -53,6 +54,10 @@ run_target
 
 hint "-f が指定されていないときは、エラーと使い方を標準エラー出力に出して exit 1 で終わります。"
 assert_status 1 "-f を指定せずに実行すると終了ステータス1で終わる"
+
+hint "メッセージは仕様どおりの文言(句点まで)にしてください。"
+assert_stderr_contains "エラー: -f でCSVファイルを指定してください。" \
+    "-f が未指定のとき、指定を促すエラーを標準エラー出力に表示する"
 
 hint "使い方の表示は usage >&2 のように標準エラー出力へ向けます。"
 assert_stderr_contains "使い方" "-f が未指定のとき、使い方を標準エラー出力に表示する"
@@ -127,13 +132,17 @@ else
     hint "失敗が0件なら exit 0 です。"
     assert_status 0 "失敗が0件のときは終了ステータス0で終わる"
 
-    hint "カウンタはループの外に残す必要があります。パイプではなく < <(...) で渡します。"
+    hint "カウンタはループの外に残す必要があります(パイプではなく < <(...) で渡します)。ヘッダー行や空行を数えてしまっていないかも確認してください。"
     assert_stdout_contains "成功: 2件 / スキップ: 1件 / 失敗: 0件" \
         "成功・スキップ・失敗の件数を集計して表示する"
 
     hint "useradd -m -c \"<氏名>\" -g \"<部署>\" -s /bin/bash \"<ユーザー名>\" の形で実行します。"
     assert_stub_called useradd "-c 山田 太郎.*-g sales.*yamada_t" \
         "useradd に氏名(-c)と部署(-g)を渡してユーザーを作成する"
+
+    hint "作成できた行は「INFO ユーザー <名> (氏名: <氏名> / 部署: <部署>) を作成しました」の形で記録します。"
+    assert_stdout_contains "INFO ユーザー yamada_t (氏名: 山田 太郎 / 部署: sales) を作成しました" \
+        "作成したユーザーを氏名と部署を添えて INFO として記録する"
 
     hint "getent passwd で見つかったユーザーはスキップします。"
     assert_stdout_contains "SKIP ユーザー sato_h は既に存在するためスキップしました" \
@@ -144,6 +153,10 @@ else
 
     hint "getent group で見つからないグループだけ groupadd で作ります。"
     assert_stub_called groupadd "dev" "存在しないグループ dev を groupadd で作成する"
+
+    hint "作ったグループは「INFO グループ <部署> を作成しました」の形で記録します。"
+    assert_stdout_contains "INFO グループ dev を作成しました" \
+        "作成したグループを INFO として記録する"
 
     hint "既にあるグループを作り直してはいけません(べき等性)。"
     assert_stub_not_called groupadd "sales" "既に存在するグループ sales は作成しない"
@@ -174,6 +187,10 @@ else
 
     hint "実行するはずだった内容を [dry-run] 付きで表示します。"
     assert_stdout_contains "[dry-run]" "ドライランでは [dry-run] 付きのログを表示する"
+
+    hint "ドライランの最後には「ドライランのため、実際には作成していません。」も出します(句点まで含めます)。"
+    assert_stdout_contains "ドライランのため、実際には作成していません。" \
+        "ドライランのときは、実際には作成していないことを最後に伝える"
 
     hint "ドライランでは、危険なコマンドに到達する前に continue で次の行へ進みます。"
     assert_file_not_contains "$STUB_LOG" '^(useradd|groupadd|chpasswd|chage)' \

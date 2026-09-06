@@ -194,7 +194,7 @@ tar -tzf /tmp/ex07/backup/backup_*.tar.gz
   ✓ [1] bashの構文エラーがない
   ✓ [2] 引数なしで実行すると終了ステータス1で終わる
   ...
-  結果: 16/16 合格
+  結果: 17/17 合格
 ```
 
 ---
@@ -309,7 +309,7 @@ fi
 |---|---|
 | `tar: Removing leading '/' from member names` と出る | 対象を絶対パスのまま `tar` に渡している。`-C "$(dirname ...)"` と `"$(basename ...)"` の組み合わせに直す |
 | `.log` が除外されない | `--exclude=*.log` をクォートしていない。シェルが先に展開してしまうので `--exclude='*.log'` と書く |
-| `tar: backup/backup_....tar.gz: Cannot open: No such file or directory` | 保存先ディレクトリを作る前に `tar` を実行している。`mkdir -p "$DEST_DIR"` を先に書く |
+| `tar (child): backup/backup_....tar.gz: Cannot open: No such file or directory` | 保存先ディレクトリを作る前に `tar` を実行している。`mkdir -p "$DEST_DIR"` を先に書く |
 | ファイル名が `backup_.tar.gz` になる | `date` のフォーマットを取り込めていない。`$(date '+%Y%m%d_%H%M%S')` のようにコマンド置換で囲む |
 | サイズの表示が `4.0K   backup/....tar.gz` になる | `du -h` の出力はサイズとパスのタブ区切り。`cut -f1` でサイズだけ取り出す |
 | `tar` が失敗しても終了ステータスが0 | `tar` の結果を見ていない。`if tar ...; then ... else ... fi` で分岐する |

@@ -209,6 +209,7 @@ jobs:
 - `jobs:` (行頭から書く)
 - `runs-on: ubuntu-latest` が**2行**
 - `- uses: actions/checkout@v4` が**2行**
+- `shellcheck scripts/*.sh` と `bash scripts/test.sh` (`run:` に続けて1行で書いても、`run: |` の下に並べてもよい)
 - `needs: test`
 - `if:` の行に `refs/heads/main` を含む
 - `${{ secrets.SSH_PRIVATE_KEY }}` / `${{ secrets.DEPLOY_USER }}` / `${{ secrets.DEPLOY_HOST }}`
@@ -239,8 +240,10 @@ python3 -c 'import yaml,sys; yaml.safe_load(open(sys.argv[1]))' \
   ✓ [1] 雛形の TODO 行が残っていない
   ✓ [2] インデントにタブ文字を使っていない
   ...
-  結果: 16/16 合格
+  結果: 18/18 合格
 ```
+
+PyYAML(YAMLを読むPythonライブラリ)が入っていない環境では、最後のYAML構文チェックが「スキップ」となり、分母が1つ減って「結果: 17/17 合格 (スキップ 1件)」と表示されます。**スキップは不合格ではありません。**
 
 ---
 
@@ -350,7 +353,7 @@ jobs:
 | 症状 | 原因と対処 |
 |---|---|
 | `yaml.scanner.ScannerError: found character '\t' that cannot start any token` | インデントにタブが混ざっている。エディタで「タブをスペースに変換」を有効にし、半角スペース2つに直す |
-| `mapping values are not allowed in this context` | コロンの後ろの半角スペースが抜けている(`name:deploy` は誤り)。`name: deploy` と書く |
+| `mapping values are not allowed here` | コロンの後ろの半角スペースが抜けている(`name:deploy` は誤り)。`name: deploy` と書く |
 | pushしても何も動かない | ファイルの置き場所が違う。本番では `.github/workflows/deploy.yml` に置く。`on:` のブランチ名が実際のブランチ名と違う場合もある |
 | プルリクエストのたびに本番へ配布されてしまう | `deploy` ジョブに `if: github.ref == 'refs/heads/main'` を書き忘れている |
 | `Permission denied (publickey)` でSSHに失敗する | `chmod 600` を忘れている。権限が緩い秘密鍵はSSHが受け付けない |

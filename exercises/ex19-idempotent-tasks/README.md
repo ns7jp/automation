@@ -85,7 +85,7 @@ Ansible から見えるのは「コマンドを実行した」ということだ
     state: present
 ```
 
-`regexp` が「同じ設定を書いた行」を見つける目印になります。`^#?PermitRootLogin` は「行頭が `PermitRootLogin`、または `#PermitRootLogin`」という意味で、`#` でコメントアウトされている初期設定も拾えるようにしています。**`regexp` を書き忘れると `lineinfile` でも行が増えていく**ので、必ずセットで書いてください。
+`regexp` が「同じ設定を書いた行」を見つける目印になります。`^#?PermitRootLogin` は「行頭が `PermitRootLogin`、または `#PermitRootLogin`」という意味で、`#` でコメントアウトされている初期設定も拾えるようにしています。**`regexp` を書き忘れると、`lineinfile` は `line` と完全一致する行しか探せません。** 初期状態の `#PermitRootLogin prohibit-password` を「同じ設定の行」だと気づけず、消さずに残したまま別の行として追記してしまい、同じ設定が2つ並んだファイルになります。`regexp` は必ずセットで書いてください。
 
 **主な置き換え先モジュール**
 
@@ -153,7 +153,7 @@ Ansible から見えるのは「コマンドを実行した」ということだ
 | 15 | あるべき状態の宣言 | `state: present` |
 | 16 | YAMLの書式 | YAMLとして構文エラーなく読み込める |
 
-上の表の文字列は、**そのままの綴り・大文字小文字・半角スペースの位置**で採点します。No.4 と No.5 は、`ansible.builtin.shell:` と `shell:` のどちらの書き方も残っていないことを確認します。**タスク1の `shell: /bin/bash` は `user` モジュールの引数なので消さないでください**(モジュール名ではなく引数なので、採点でも区別しています)。
+上の表の文字列は、**そのままの綴り・大文字小文字・半角スペースの位置**で採点します。No.4 は `ansible.builtin.shell:` と `shell:` の、No.5 は `ansible.builtin.command:` と `command:` の、どちらの書き方も残っていないことを確認します。**タスク1の `shell: /bin/bash` は `user` モジュールの引数なので消さないでください**(モジュール名ではなく引数なので、採点でも区別しています)。
 
 対応表に出てくる `name` `path` `owner` `group` `mode` `line` `create_home` は採点対象ではありませんが、実務では必ず書くものなので一緒に書いてください。
 
@@ -197,6 +197,8 @@ python3 -c 'import yaml,sys; yaml.safe_load(open(sys.argv[1]))' \
 ```
 
 この演習では Ansible をインストールする必要はありません。サーバーに接続することも、`ansible-playbook` を実行することもありません。**書いたYAMLの中身だけ**を採点します。
+
+手順4の `python3 -c 'import yaml...'` は、PyYAML(YAMLを読むPythonライブラリ)が入っている場合だけ動きます。`ModuleNotFoundError` と出たら、その環境にはPyYAMLがありません。採点側も同じで、PyYAMLが無い環境ではYAML構文チェックの1項目が「スキップ」となり、分母が1つ減ります。**スキップは不合格ではありません。**(入れる場合: `sudo apt install -y python3-yaml`)
 
 ---
 
@@ -284,10 +286,10 @@ python3 -c 'import yaml,sys; yaml.safe_load(open(sys.argv[1]))' \
 | 症状 | 原因と対処 |
 |---|---|
 | 2回目の実行で `changed` が出続ける | `shell` / `command` が残っている。「4. やり方」の手順3のコマンドで探す |
-| `/etc/ssh/sshd_config` に同じ行が増えていく | `lineinfile` に `regexp` を書いていない。`line` だけでは既存行を見つけられない |
+| `/etc/ssh/sshd_config` に `PermitRootLogin` の行が2つ並ぶ | `lineinfile` に `regexp` を書いていない。`line` と完全一致する行しか探せないため、既存の `#PermitRootLogin ...` を見つけられず別の行として追記されている |
 | `useradd: user 'webadmin' already exists` | まだ `shell: useradd ...` のまま。`user` モジュールに書き換える |
-| `has no attribute 'state'` のようなエラー | 引数のインデントが浅く、モジュールの中ではなくタスク直下のキーになっている |
-| ディレクトリの権限が `--w----r-T` になる | `mode: 0755` とクォート無しで書いた。`mode: "0755"` と囲む |
+| `ERROR! 'state' is not a valid attribute for a Task` | 引数のインデントが浅く、モジュールの中ではなくタスク直下のキーになっている |
+| ディレクトリの権限が `--wxrw--wt` になる | `mode: 755` と先頭の `0` を書かずクォートも付けなかった。10進数の755(8進数では1363)として解釈されている。`mode: "0755"` とクォートで囲めば、この取り違えは起きない |
 | `Unsupported parameters for (user) module` | 引数名の綴り違い。`create_home` を `createhome` と書いていないか確認する |
 
 `./check.sh 19` が失敗したときは、**「期待」と「実際」の差分**を必ず読んでください。どの行が足りないかがそのまま書かれています。

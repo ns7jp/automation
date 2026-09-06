@@ -80,16 +80,20 @@ hint "ping が成功したときは [OK] <表示名> (ping) の形式です。�
 assert_stdout_contains "[OK] web01 (ping)" "ping で応答があった行を「[OK] web01 (ping)」と表示する"
 
 hint "http のときはステータスコードも出します: [OK] <表示名> (http: 200)"
-assert_stdout_contains "[OK] web02 (http: 200)" "HTTPが200のとき「[OK] web02 (http: 200)」と表示する"
+assert_stdout_contains "[OK] web02 (http: 200)" \
+    "HTTPが200のとき「[OK] web02 (http: 200)」と表示する"
 
 hint "ping が失敗したときの理由は「応答なし」という固定の文言です。"
-assert_stdout_contains "[NG] web03 (ping: 応答なし)" "ping が失敗した行を「[NG] web03 (ping: 応答なし)」と表示する"
+assert_stdout_contains "[NG] web03 (ping: 応答なし)" \
+    "ping が失敗した行を「[NG] web03 (ping: 応答なし)」と表示する"
 
 hint "200番台以外はすべて異常です。判定は [[ \"\$code\" =~ ^2[0-9][0-9]\$ ]] で書けます。"
-assert_stdout_contains "[NG] web04 (http: 500)" "HTTPが500のとき「[NG] web04 (http: 500)」と表示する"
+assert_stdout_contains "[NG] web04 (http: 500)" \
+    "HTTPが500のとき「[NG] web04 (http: 500)」と表示する"
 
 hint "種別が ping / http のどちらでもない行は [SKIP] を出して次の行へ進みます。"
-assert_stdout_contains "[SKIP] web05 種別が不正です: pong" "不正な種別の行を「[SKIP] web05 種別が不正です: pong」と表示する"
+assert_stdout_contains "[SKIP] web05 種別が不正です: pong" \
+    "不正な種別の行を「[SKIP] web05 種別が不正です: pong」と表示する"
 
 DETAIL_LINES="$(printf '%s\n' "$LAST_STDOUT" | grep -c '^\[')"
 hint "空行と # で始まる行は読み飛ばします。[[ -z \"\$name\" || \"\$name\" == \\#* ]] && continue"

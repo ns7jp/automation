@@ -305,7 +305,7 @@ echo "新規: ${NEW_COUNT}行 (総行数: ${TOTAL_LINES}行)"
 | 2回目も1行目から全部出てしまう | 状態ファイルを書いていない、または `>` ではなく別の場所に書いている。`cat app.log.offset` で中身を確認する |
 | `tail: invalid number of lines: '+'` と出る | `tail -n "+${START}"` の `START` が空。`wc -l` の結果を変数に入れ忘れていないか確認する |
 | 毎回1行多く/少なく出る | `+` の意味の取り違え。`tail -n +1` が先頭から、`tail -n +4` は4行目からで、`+0` は使わない |
-| 数字を比べているのに `integer expression expected` と出る | `wc -l app.log` のようにファイル名付きで数えている。`wc -l < app.log` に直す |
+| 数字を比べたり計算したりすると `syntax error: invalid arithmetic operator` (`[ ]` を使った場合は `integer expression expected`) と出る | `wc -l app.log` のようにファイル名付きで数えていて、変数に `3 app.log` という文字列が入っている。`wc -l < app.log` に直す |
 | 最終行が読み飛ばされる | ログの最終行が改行で終わっていない。`wc -l` は改行の数を数えるため、この場合1行少なく数える。テスト用のログは `printf 'a\nb\n'` のように改行で終わらせる |
 | ローテートしたのに何も出ない | 行数が減ったときに `LAST_LINE` を 0 に戻していない。メッセージを出すだけでは不十分 |
 
@@ -327,7 +327,7 @@ echo "新規: ${NEW_COUNT}行 (総行数: ${TOTAL_LINES}行)"
 
 案件No.3 は `tail -F` でログを常時見張る「常駐方式」ですが、この演習の「cron + 状態ファイル方式」は、その代替として実務で頻繁に使われます。
 
-- 「同じ行を二度処理しない」ための状態管理 → [`log-watch-alert.sh`](../../projects/03-log-monitoring-alert/src/log-watch-alert.sh) の `STATE_FILE` (直近通知時刻と抑制件数を保存している)
+- 「前回の実行結果をファイルに残して次回に引き継ぐ」という状態ファイルの使い方 → [`log-watch-alert.sh`](../../projects/03-log-monitoring-alert/src/log-watch-alert.sh) の `STATE_FILE` (案件では読んだ位置ではなく、直近通知時刻と抑制件数を保存している)
 - 状態ファイルを置くディレクトリを設定値として外に出す考え方 → 同案件の `STATE_DIR`
 - 常駐方式では `tail -F` がプロセスの中で読み進む位置を覚えているため、状態ファイルが不要です。裏を返すと、**プロセスが死ぬと位置を忘れる**ため、再起動時の取りこぼしが起きます。この演習の方式にはその弱点がありません
 - ex12 で作った通知の抑止と組み合わせると、「差分だけを読み、通知しすぎない」監視スクリプトになります

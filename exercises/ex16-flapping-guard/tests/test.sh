@@ -34,6 +34,9 @@ run_target web01 down
 hint "2つ目の引数は ok か ng だけです。case \"\$RESULT\" in ok|ng) ;; *) ... で弾きます。"
 assert_status 1 "監視結果に ok / ng 以外を指定すると終了ステータス1で終わる"
 
+hint "値が正しくないときも、使い方を標準エラー出力へ出してから終了します。"
+assert_stderr_contains "使い方" "ok / ng 以外を指定したときも使い方を標準エラー出力に表示する"
+
 #-------------------------------------------------------------------------------
 describe "正常系: しきい値(既定3回)に達するまでは通知しない"
 #-------------------------------------------------------------------------------
@@ -97,10 +100,11 @@ hint "正常に処理できた場合は exit 0 です。"
 assert_status 0 "正常に処理できたときは終了ステータス0で終わる"
 
 #-------------------------------------------------------------------------------
-describe "正常系: FAIL_THRESHOLD でしきい値を変えられる"
+describe "正常系: 環境変数 STATE_DIR / FAIL_THRESHOLD で動作を変えられる"
 #-------------------------------------------------------------------------------
 # export しないと run_target が起動するサブシェルに値が渡らない
 export FAIL_THRESHOLD=2
+export STATE_DIR="custom_state"
 
 run_target web09 ng
 run_target web09 ng
@@ -108,5 +112,9 @@ run_target web09 ng
 hint "しきい値は環境変数 FAIL_THRESHOLD から受け取ります: \${FAIL_THRESHOLD:-3}"
 assert_stdout_contains "通知: web09 が異常です (連続2回失敗)" \
     "FAIL_THRESHOLD=2 のときは2回目の失敗で通知する"
+
+hint "状態ファイルの置き場所も環境変数から受け取ります: \${STATE_DIR:-./state} 。無いディレクトリは mkdir -p で作ります。"
+assert_file_contains "custom_state/web09.state" '^2 yes$' \
+    "STATE_DIR で指定したディレクトリに状態ファイルを作る"
 
 finish
