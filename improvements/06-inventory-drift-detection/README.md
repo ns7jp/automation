@@ -100,7 +100,7 @@ flowchart LR
 | 4 | [03-design.md](./03-design.md) | 改善設計書(To-Be。構成図・処理フロー・JSONスキーマ・差分検知ロジック) |
 | 5 | [04-build-guide.md](./04-build-guide.md) | 実装・移行手順書(段階的導入・ロールバック手順つき) |
 | 6 | [05-effect-measurement.md](./05-effect-measurement.md) | 効果測定レポート(Before/After比較・検証方法・残課題) |
-| 7 | [06-troubleshooting.md](./06-troubleshooting.md) | トラブルシューティング集(Q&A形式・7件) |
+| 7 | [06-troubleshooting.md](./06-troubleshooting.md) | トラブルシューティング集(Q&A形式・10件) |
 | 8 | [src/remote_probe.sh](./src/remote_probe.sh) | 対象サーバー上で構成情報を吐き出す収集スクリプト |
 | 9 | [src/collect_inventory.sh](./src/collect_inventory.sh) | 全台へ収集を実行し、JSONスナップショットを保存する本体 |
 | 10 | [src/detect_drift.sh](./src/detect_drift.sh) | 前回との差分を検知し、レポート・通知を行う |

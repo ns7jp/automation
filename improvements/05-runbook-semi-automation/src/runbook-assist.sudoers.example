@@ -51,3 +51,11 @@ Cmnd_Alias RUNBOOK_RECOVER = /usr/bin/systemctl reload nginx, \
 #   * /usr/sbin/reboot                   (サーバー再起動は影響が大きすぎるため)
 #   * /bin/rm                            (削除はツールで行わないため)
 #   これらが必要な場面は「人が責任を持って手作業で行う」領域と位置づけている。
+#
+#   * /opt/runbook-assist/recover.sh      ← スクリプト自体もあえて許可しない
+#     理由: recover.sh は --config で指定された設定ファイルを source する。
+#     スクリプトごと sudo を許可すると
+#       sudo /opt/runbook-assist/recover.sh -c /tmp/任意のファイル
+#     で任意のコマンドを root 実行できてしまい、実質 root 権限を渡すのと同じになる。
+#     スクリプトは一般ユーザー権限で動かし、権限が必要なコマンドだけを
+#     上記のように1つずつ許可するのが安全(最小権限の原則)。

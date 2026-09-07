@@ -80,7 +80,8 @@ if ! [[ "$DAYS" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 # 棚卸しでは通知を送らないので、静かに動かす
-AR_QUIET="true"
+# common.sh の ar_log がこの値を見る(export しておくと共通関数側から確実に参照できる)
+export AR_QUIET="true"
 if ! ar_load_rules "$AR_RULES_FILE"; then
     exit 1
 fi
@@ -179,8 +180,13 @@ else
     printf '集計対象: %s\n' "$INPUT_FILE"
     printf '集計期間: %d日分 / 合計 %d 件(1日あたり %s 件)\n\n' \
         "$DAYS" "$TOTAL" "$(per_day "$TOTAL" "$DAYS")"
+    # 見出しは半角英字にしている。日本語は1文字が3バイトになるため、
+    # printf の桁揃え(%-9s など)は文字数ではなくバイト数で数えられ、
+    # 日本語の見出しを使うと表がずれてしまうため。
+    # (RULE=ルールID / SEV=重要度 / CHANNEL=通知先 / COUNT=件数
+    #  / PER-DAY=1日あたり / SHARE=割合)
     printf '%-9s %-4s %-9s %7s %9s %7s  %s\n' \
-        "ルールID" "重要度" "通知先" "件数" "1日あたり" "割合" "内容"
+        "RULE" "SEV" "CHANNEL" "COUNT" "PER-DAY" "SHARE" "内容"
     printf -- '-------------------------------------------------------------------------------------\n'
     while IFS=$'\t' read -r count rule_id; do
         [[ -z "$count" ]] && continue
@@ -195,9 +201,9 @@ else
     done <<<"$sorted_rules"
     printf -- '-------------------------------------------------------------------------------------\n'
     printf '%-9s %-4s %-9s %7s %9s %6s%%\n\n' \
-        "合計" "" "" "$TOTAL" "$(per_day "$TOTAL" "$DAYS")" "100.0"
+        "TOTAL" "" "" "$TOTAL" "$(per_day "$TOTAL" "$DAYS")" "100.0"
 
-    printf '----- 重要度別の内訳 -----\n'
+    printf '%s\n' '----- 重要度別の内訳 -----'
     for severity in P1 P2 P3; do
         count="${SEVERITY_HITS[$severity]:-0}"
         printf '%-4s %7s 件  1日あたり %6s 件  (%5s%%)\n' \
@@ -205,7 +211,7 @@ else
     done
     printf '\n'
 
-    printf '----- 発生元別の内訳 -----\n'
+    printf '%s\n' '----- 発生元別の内訳 -----'
     for src_name in "${!SOURCE_HITS[@]}"; do
         printf '%s\t%s\n' "${SOURCE_HITS[$src_name]}" "$src_name"
     done | sort -t "$(printf '\t')" -k1,1nr | while IFS=$'\t' read -r count src_name; do
