@@ -98,7 +98,7 @@ Slackの監視チャンネル `#monitoring` には1日約200件の通知が流�
 | `03-design.md` | 改善設計書(To-Be)。構成図・処理フロー・ルール仕様・技術解説 |
 | `04-build-guide.md` | 実装・移行手順書。影実行による段階的移行とロールバック手順を含む |
 | `05-effect-measurement.md` | 効果測定レポート。Before/After比較と「消してよかったか」の検証 |
-| `06-troubleshooting.md` | トラブルシューティング集(Q&A形式・8件) |
+| `06-troubleshooting.md` | トラブルシューティング集(Q&A形式・12件) |
 | `src/common.sh` | 共通関数ライブラリ(ログ・ルール読み込み・分類・集約・通知) |
 | `src/alert-router.sh` | 通知の入口。分類・集約・重複排除・振り分けを行う本体 |
 | `src/alert-router.conf` | 共通設定ファイル(しきい値・通知先・動作モード) |

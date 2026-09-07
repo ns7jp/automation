@@ -103,7 +103,7 @@ curl -s -X POST -H 'Content-type: application/json' \
 
 **なぜこれだけで済むのか**: 既存ツールがやっていたのは「文字列をSlackへ渡す」ことだけである。その渡し先を入口に変えるだけで、分類・集約・記録のすべてが入口側で行われる。**ツール側は自分の通知が最終的にどう扱われるかを知らなくてよい**(=責務の分離)。
 
-> **注**: 本改善案件では `projects/` 配下は変更していない。上記は「本番環境で行う差し替え手順」として [04-build-guide.md](./04-build-guide.md) のStep 7で示す。
+> **注**: 本改善案件では `projects/` 配下は変更していない。上記は「本番環境で行う差し替え手順」として [04-build-guide.md](./04-build-guide.md) のStep 8.2 で示す。
 
 ## 3. 重要度(severity)の設計
 
@@ -521,7 +521,7 @@ sequenceDiagram
     participant AR as alert-router.sh
     participant ST as 集約状態ファイル
     participant FL as alert-flush.sh (cron)
-    participant SL as Slack #alert-daily
+    participant SL as Slack alert-daily チャンネル
 
     Note over AR,ST: 09:05:00 最初の通知が届く
     App->>AR: ERROR payment timeout (1件目)

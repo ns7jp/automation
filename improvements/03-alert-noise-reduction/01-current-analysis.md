@@ -319,7 +319,7 @@ flowchart TD
 sequenceDiagram
     autonumber
     participant Tool as 監視ツール群
-    participant Slack as Slack #monitoring
+    participant Slack as Slack monitoring チャンネル
     participant Ops as 運用担当者
 
     Note over Slack: 1日200件が流れ続ける

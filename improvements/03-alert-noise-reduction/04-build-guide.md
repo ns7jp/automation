@@ -449,8 +449,8 @@ sequenceDiagram
     participant Tool as 監視ツール
     participant AR as alert-router.sh<br/>(AR_MODE=shadow)
     participant REC as records.jsonl
-    participant OLD as Slack #monitoring<br/>(既存)
-    participant NEW as Slack #alert-p1<br/>#alert-daily
+    participant OLD as 旧 monitoring チャンネル<br/>(既存)
+    participant NEW as 新 alert-p1 チャンネル<br/>alert-daily チャンネル
 
     Tool->>AR: 通知を渡す
     AR->>AR: 分類・集約・重複排除を計算

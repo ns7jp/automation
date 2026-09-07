@@ -80,7 +80,8 @@ if ! [[ "$DAYS" =~ ^[1-9][0-9]*$ ]]; then
 fi
 
 # 棚卸しでは通知を送らないので、静かに動かす
-AR_QUIET="true"
+# common.sh の ar_log がこの値を見る(export しておくと共通関数側から確実に参照できる)
+export AR_QUIET="true"
 if ! ar_load_rules "$AR_RULES_FILE"; then
     exit 1
 fi
