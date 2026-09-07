@@ -1,0 +1,53 @@
+# =====================================================================
+# runbook-assist.sudoers.example
+# 改善案件No.5: 障害対応担当者へ最小限の権限だけを渡すためのsudo設定例
+#
+# 配置先: /etc/sudoers.d/runbook-assist
+#
+# 手順(必ずこの順番で行うこと):
+#   1. 文法チェック(ここで間違えるとsudoが使えなくなり復旧が困難になる)
+#        sudo visudo -cf src/runbook-assist.sudoers.example
+#   2. 配置
+#        sudo cp src/runbook-assist.sudoers.example /etc/sudoers.d/runbook-assist
+#        sudo chown root:root /etc/sudoers.d/runbook-assist
+#        sudo chmod 440 /etc/sudoers.d/runbook-assist
+#   3. 反映確認(対象ユーザーで実行できるコマンドの一覧を表示する)
+#        sudo -l -U opsuser
+#
+# 設計方針:
+#   recover.sh は「rootでなければ sudo -n を付けて実行する」作りになっている。
+#   そのため、担当者アカウントに root 権限そのものを渡す必要はなく、
+#   このツールが使う数個のコマンドだけを許可すればよい。
+#   権限は「必要な分だけ与える」のが原則(最小権限の原則)。
+#
+# 注意:
+#   * ここで許可するコマンドは、必ずフルパスかつ引数まで固定して書く。
+#     引数を省略して /usr/bin/systemctl だけを許可すると、
+#     「systemctl でどんなサービスでも操作できる」状態になってしまう。
+#   * コマンドのパスは環境によって異なる(command -v systemctl などで確認する)。
+# =====================================================================
+
+# 障害対応を担当するユーザーが所属するグループ名(環境に合わせて変更する)
+# ここでは "ops" グループを想定している。
+
+# --- 診断(読み取りのみ)で使うコマンド ---
+Cmnd_Alias RUNBOOK_DIAG = /usr/sbin/nginx -t
+
+# --- 復旧(半自動)で使うコマンド ---
+# サービスの reload / restart は対象サービス名まで固定する。
+Cmnd_Alias RUNBOOK_RECOVER = /usr/bin/systemctl reload nginx, \
+                             /usr/bin/systemctl restart nginx, \
+                             /usr/sbin/logrotate --force /etc/logrotate.d/nginx
+
+# NOPASSWD を付ける理由:
+#   recover.sh は sudo -n(パスワードを聞かない)で実行するため、
+#   パスワードが必要な設定だと即座に失敗する。
+#   ただし「パスワード無しで実行できる範囲」を上記のコマンドだけに
+#   限定しているため、権限が広がりすぎることはない。
+%ops ALL=(root) NOPASSWD: RUNBOOK_DIAG, RUNBOOK_RECOVER
+
+# --- 意図的に許可していないもの ---
+#   * /usr/bin/systemctl stop nginx      (停止は復旧操作ではないため)
+#   * /usr/sbin/reboot                   (サーバー再起動は影響が大きすぎるため)
+#   * /bin/rm                            (削除はツールで行わないため)
+#   これらが必要な場面は「人が責任を持って手作業で行う」領域と位置づけている。

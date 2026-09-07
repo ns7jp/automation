@@ -1,0 +1,41 @@
+# =====================================================================
+# runbook-assist.logrotate
+# 改善案件No.5: 監査ログ・診断レポートのローテート設定
+#
+# 配置先: /etc/logrotate.d/runbook-assist
+#   sudo cp src/runbook-assist.logrotate /etc/logrotate.d/runbook-assist
+#   sudo chown root:root /etc/logrotate.d/runbook-assist
+#   sudo chmod 644 /etc/logrotate.d/runbook-assist
+#
+# なぜスクリプト側で古いファイルを消さないのか:
+#   「古いファイルを削除する」処理を自作すると、パスの指定ミス1つで
+#   まったく無関係なファイルを消してしまう危険がある。
+#   ログの世代管理はOS標準の logrotate に任せるのが安全で、
+#   運用担当者にとっても見慣れた設定方法になる。
+#
+# 設定内容の確認(実際には削除せず、動作予定だけを表示する):
+#   sudo logrotate -d /etc/logrotate.d/runbook-assist
+# =====================================================================
+
+# --- 監査ログ(誰が・いつ・何をしたかの記録) ---
+# 監査ログは「後から追跡できること」が目的なので、長めに保管する。
+/var/log/runbook-assist/audit.log {
+    monthly
+    rotate 24          # 24世代 = 約2年分を保管する
+    compress           # 2世代目以降はgzipで圧縮して容量を節約する
+    delaycompress      # 直近の1世代は圧縮しない(すぐ中身をgrepできるように)
+    missingok          # ファイルが無くてもエラーにしない
+    notifempty         # 中身が空のときはローテートしない
+    create 640 root adm
+}
+
+# --- 診断レポート(実行のたびに1ファイル増える) ---
+# こちらは調査用の一時的な資料なので、保管期間は短くてよい。
+/var/log/runbook-assist/diagnosis/*.log {
+    weekly
+    rotate 4           # 約1か月分を保管する
+    compress
+    missingok
+    notifempty
+    create 640 root adm
+}

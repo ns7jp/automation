@@ -4,7 +4,7 @@
 
 Linuxサーバーの運用・構築業務でよくある「手作業のミス」「対応漏れ」「属人化」といった課題を、実在しそうな中小企業からの依頼(架空の設定)という体裁で自動化する、全6件の疑似案件を収録したリポジトリです。
 
-さらに、その6案件を「読んで分かる」から「自分で書ける」に変えるための、**自動採点つき演習パック(全21演習)** を [exercises/](exercises/README.md) に収録しています。
+さらに、その6案件を「読んで分かる」から「自分で書ける」に変えるための **自動採点つき演習パック(全21演習)** を [exercises/](exercises/README.md) に、そして「作れる」の次に問われる **「今ある運用を分析して直せる」** を示す **改善案件パック(全6件)** を [improvements/](improvements/README.md) に収録しています。
 
 ## このポートフォリオのコンセプト
 
@@ -16,6 +16,7 @@ Linuxサーバーの運用・構築業務でよくある「手作業のミス」
 - **ドキュメント一式を揃える**: 要件定義書・設計書(Mermaid図つき)・構築手順書・テスト仕様書・トラブルシューティング集まで、実務で求められる成果物の型を各案件で統一して作成する。
 - **実際に動かして検証する**: すべてのスクリプト・設定ファイルは、Ubuntu Serverなどの実機相当の環境で動作確認済み。「動くはず」ではなく「動くことを確認した」状態で公開している。
 - **自分の手で書く場を用意する**: 完成品を読むだけでは書けるようにならないため、1演習30〜90分の演習パックを併設。`./check.sh` による自動採点で、独学でも即座に答え合わせができる。
+- **「作る」だけでなく「直す」も示す**: 実務で多いのは既存運用の改善であるため、現状分析・複数案の比較・段階的移行・効果測定までを型にした改善案件パックを併設。判断の理由を語れる状態にする。
 
 初心者向けの学習リソースとしても使えるよう、専門用語には初出時に一言解説を添え、コマンド例には実行結果のイメージを併記しています。
 
@@ -53,6 +54,25 @@ cd automation/exercises
 
 演習は6ステージ・21演習で、案件No.1〜No.6に1対1で対応しています。設計の考え方(学習設計・難易度設計・採点システムの設計)は [exercises/docs/01-design.md](exercises/docs/01-design.md) にまとめています。
 
+## 現状を分析して直す: 自動化改善ツール構築 案件パック
+
+上記の構築案件パックが「ゼロから作れること」を示すのに対し、[improvements/](improvements/README.md) の**改善案件パック(全6件)** は「**すでに動いている運用を分析し、課題を見つけ、直して、効果を数字で示せること**」を示します。入社後に任される仕事は、新規構築よりも既存運用の改善のほうが多いためです。
+
+| No. | 改善案件名 | 難易度 | 代表指標(Before → After) | リンク |
+|---|---|---|---|---|
+| 1 | 月次運用報告書の作成を自動集計・自動生成に改善 | ★☆☆☆☆ | 作業時間 3時間/月 → **5分/月** | [improvements/01-ops-report-automation/](improvements/01-ops-report-automation/README.md) |
+| 2 | コピペで増えた運用スクリプトを共通ライブラリ化して保守性と潜在バグを改善 | ★★☆☆☆ | 修正時に触るファイル 4 → **1**、潜在バグ 2箇所 → **0** | [improvements/02-shared-library-refactoring/](improvements/02-shared-library-refactoring/README.md) |
+| 3 | アラート過多(アラート疲れ)を棚卸しと重要度分類で改善 | ★★★☆☆ | 通知 200件/日 → **12件/日**、見逃し 月2件 → **0件** | [improvements/03-alert-noise-reduction/](improvements/03-alert-noise-reduction/README.md) |
+| 4 | cronのサイレント障害を実行結果の可視化と失敗検知で撲滅 | ★★★☆☆ | 失敗に気づくまで 平均18時間 → **5分以内** | [improvements/04-cron-job-observability/](improvements/04-cron-job-observability/README.md) |
+| 5 | 手順書ベースの障害対応を半自動化してMTTRを短縮 | ★★★★☆ | MTTR 40分 → **12分** | [improvements/05-runbook-semi-automation/](improvements/05-runbook-semi-automation/README.md) |
+| 6 | 手動更新のサーバー台帳を構成情報の自動収集・差分検知に改善 | ★★★★☆ | 棚卸し 8時間/四半期 → **0(日次自動)** | [improvements/06-inventory-drift-detection/](improvements/06-inventory-drift-detection/README.md) |
+
+全6件が「現状分析 → 課題抽出(最低3案の比較と選定理由) → 改善設計 → 段階的移行とロールバック → 効果測定」という同じ型で構成されています。型そのものの解説は [improvements/docs/01-kaizen-method.md](improvements/docs/01-kaizen-method.md)、効果の測り方と面接での語り方は [improvements/docs/02-metrics-guide.md](improvements/docs/02-metrics-guide.md) にまとめています。
+
+なお改善案件No.2は、**このリポジトリ自身のコードが題材**です。構築案件No.1〜No.4に同じようなログ関数・通知関数がコピペで散在し、片方だけ修正されて他に伝播していない潜在バグが残っている状態を、共通ライブラリ化で解消します。
+
+> 改善案件の数値はすべて**架空の運用シナリオに基づく設定**です。各案件の効果測定レポートに、検証環境での実測値か想定シナリオに基づく試算かを明記しています。
+
 ## 学習の進め方(概要)
 
 **シェルスクリプトを書いた経験がない場合は、まず [exercises/](exercises/README.md) の演習パック(ステージ1: ex01〜ex06、約5時間)から始めてください。** 案件No.1のスクリプトを構成する部品を、1つずつ自分の手で書けるようになります。
@@ -84,6 +104,18 @@ automation/
 │   ├── lib/                        # 採点の共通部品(判定関数・スタブ)
 │   ├── tools/                      # 静的解析・一覧生成
 │   └── exNN-<名前>/                 # 各演習(課題文 + 雛形 + 解答例 + 採点テスト)
+├── improvements/                   # 改善案件パック(全6件)
+│   ├── README.md                   # 改善案件パックの入口
+│   ├── docs/                       # 改善の型・効果測定ガイド
+│   └── NN-<名前>/                   # 各改善案件
+│       ├── README.md                # 案件概要・Before/Afterサマリ
+│       ├── 01-current-analysis.md   # 現状分析書(As-Is)
+│       ├── 02-improvement-proposal.md # 改善提案書(複数案の比較と選定理由)
+│       ├── 03-design.md             # 改善設計書(To-Be)
+│       ├── 04-build-guide.md        # 実装・移行手順書(段階移行・ロールバック)
+│       ├── 05-effect-measurement.md # 効果測定レポート(Before/After)
+│       ├── 06-troubleshooting.md    # トラブルシューティング集
+│       └── src/                     # 動作確認済みのスクリプト本体
 └── projects/                       # 案件本体(全6件)
     ├── 01-user-account-automation/
     │   ├── README.md                # 案件概要・アピールポイント
@@ -108,7 +140,7 @@ automation/
 
 - **これから学ぶ方**: [exercises/README.md](exercises/README.md) の演習パックから始めてください。環境準備を含めて1〜2時間で最初の1問が解けます。
 - **転職・就職活動中の方**: 面接での説明の仕方、職務経歴書への書き方、GitHubリポジトリの見せ方のコツをまとめています。
-- **採用担当者・面接官の方**: 各案件のREADME.md冒頭に「想定依頼元・背景」「依頼内容(要求仕様)」を記載しているため、まずはNo.4またはNo.5あたりの[README.md](projects/04-server-health-check/README.md)をご覧いただくと、案件の粒度が伝わりやすいかと思います。
+- **採用担当者・面接官の方**: 各案件のREADME.md冒頭に「想定依頼元・背景」「依頼内容(要求仕様)」を記載しているため、まずはNo.4またはNo.5あたりの[README.md](projects/04-server-health-check/README.md)をご覧いただくと、案件の粒度が伝わりやすいかと思います。判断力の部分をご覧になりたい場合は、[改善案件パック](improvements/README.md)の「改善提案書」(複数案の比較と選定理由)が分かりやすいかと思います。
 
 ## 関連ドキュメント一覧
 
@@ -118,6 +150,9 @@ automation/
 | [docs/02-learning-roadmap.md](docs/02-learning-roadmap.md) | 学習ロードマップ(取り組み順序・前提知識・学習時間目安・発展トピック) |
 | [docs/03-glossary.md](docs/03-glossary.md) | 初心者向け用語集(全案件共通、40語以上) |
 | [docs/04-environment-setup.md](docs/04-environment-setup.md) | 検証環境構築ガイド(VirtualBox/クラウド無料枠、基礎コマンド早見表) |
+| [improvements/README.md](improvements/README.md) | 改善案件パックの入口(全6件の一覧・構築案件との違い・進め方) |
+| [improvements/docs/01-kaizen-method.md](improvements/docs/01-kaizen-method.md) | 改善の型(現状分析 → 課題抽出 → 提案 → 移行 → 効果測定の5ステップ) |
+| [improvements/docs/02-metrics-guide.md](improvements/docs/02-metrics-guide.md) | 効果測定ガイド(指標の選び方・測り方・面接で語れる数字の作り方) |
 | [exercises/README.md](exercises/README.md) | 演習パックの入口(全21演習の一覧・進め方・採点ツールの使い方) |
 | [exercises/docs/01-design.md](exercises/docs/01-design.md) | 演習パック設計書(学習設計・難易度設計・自動採点システムの設計) |
 | [exercises/docs/02-getting-started.md](exercises/docs/02-getting-started.md) | 演習パックのはじめかた(環境準備から最初の1問まで) |
