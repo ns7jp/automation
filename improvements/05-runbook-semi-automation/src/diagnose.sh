@@ -563,7 +563,9 @@ fi
         printf ' [%-4s] %s %s: %s\n' \
             "${CHECK_STATUS[$id]:-SKIP}" "$id" "${CHECK_NAME[$id]}" "${CHECK_DETAIL[$id]:-未実施}"
     done
-    printf '---------------------------------------------------------------------\n'
+    # printf の書式文字列が "-" で始まるとオプションと解釈されてしまうため、
+    # 区切り線は %s を使って値として渡す。
+    printf '%s\n' '---------------------------------------------------------------------'
     printf ' 総合判定 : %s (NG=%d WARN=%d OK=%d SKIP=%d)\n' \
         "$OVERALL" "$COUNT_NG" "$COUNT_WARN" "$COUNT_OK" "$COUNT_SKIP"
     printf ' 所要時間 : %d秒\n' "$SECONDS"
