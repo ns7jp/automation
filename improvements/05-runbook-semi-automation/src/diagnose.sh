@@ -184,8 +184,13 @@ report_cmd() {
         printf '\n----- %s -----\n' "$title"
         printf '$ %s\n' "$*"
     } >> "$REPORT_FILE"
-    if ! rb_run "$@" >> "$REPORT_FILE" 2>&1; then
-        printf '(コマンドが正常終了しませんでした: rc=%s)\n' "$?" >> "$REPORT_FILE"
+    # 終了コードは変数に取ってから判定する。
+    # if ! コマンド; then ... の中で $? を見ると「!(否定)の結果」が
+    # 入ってしまい、常に0になってしまうため。
+    local rc=0
+    rb_run "$@" >> "$REPORT_FILE" 2>&1 || rc=$?
+    if [ "$rc" -ne 0 ]; then
+        printf '(コマンドが正常終了しませんでした: rc=%s)\n' "$rc" >> "$REPORT_FILE"
     fi
 }
 
