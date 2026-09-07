@@ -38,8 +38,8 @@ flowchart TD
     S9 --> S10["Step10-11<br/>デッドマン監視・<br/>日次レポートを有効化"]
     S10 --> S12["Step12-13<br/>ログローテート設定・<br/>完了確認"]
 
-    S6 -.失敗したら.-> RB1["設定を見直す<br/>(まだcronは変えていないので安全)"]
-    S7 -.失敗したら.-> RB2["ロールバック手順<br/>レベル1"]
+    S6 -. 失敗したら .-> RB1["設定を見直す<br/>(まだcronは変えていないので安全)"]
+    S7 -. 失敗したら .-> RB2["ロールバック手順<br/>レベル1"]
 
     style S6 fill:#e8f0ff,stroke:#36c
     style RB1 fill:#fff0d0,stroke:#c80
@@ -178,7 +178,7 @@ SLACK_WEBHOOK_URL="<YOUR_SLACK_WEBHOOK_URL>"
 
 💡ポイント: **この時点ではまだ書き換えなくてもよい**。プレースホルダー `<YOUR_SLACK_WEBHOOK_URL>` のままにしておくと、スクリプトは通知を送信せず、通知内容を `runner.log` に書き出す**ドライラン動作**になる。Slackの準備ができていなくても Step 6 の動作確認は進められる。本手順書では、この状態のまま動作確認を進める。
 
-### 5-2. ジョブ台帳を「すべて無効」の状態にする
+### 5-2. ジョブ台帳をすべて無効にする
 
 **なぜ**: デッドマン監視は「台帳にあるのに実行記録が無い」ジョブを未実行とみなす。移行前のジョブをいきなり有効にすると、**全ジョブが未実行として一斉に通知される**ためである。
 
@@ -536,10 +536,33 @@ grep deadman-check /var/log/cron-job-observability/records.csv | tail -n 2
 
 **なぜ**: 通知は流れて消えるが、レポートは残る。「昨日はどうだったか」を後から確認できるようにする。
 
-まずは手動で動かして確認する。**移行直後で記録が少ない場合は、リポジトリ同梱のサンプルデータで出力形式を確認できる**。
+まずは手動で動かして確認する。引数を省略すると当日分が生成される。
 
 ```bash
-sudo /opt/cron-job-observability/generate_report.sh 2026-09-06
+sudo /opt/cron-job-observability/generate_report.sh
+```
+
+出力イメージ:
+
+```text
+レポートを生成しました: /var/log/cron-job-observability/reports/2026-09-07.md
+最新版へのコピー: /var/log/cron-job-observability/reports/latest.md
+```
+
+**移行直後は記録がまだ少なく、レポートの全体像が分かりにくい**。その場合はリポジトリ同梱のサンプルデータ(1日分461件)で出力形式を確認できる。
+
+```bash
+# 1. サンプルデータを置く
+sudo cp /path/to/automation/improvements/04-cron-job-observability/src/records.sample.csv \
+        /var/log/cron-job-observability/records.sample.csv
+
+# 2. 集計元だけを差し替えた確認用の設定を作る
+sudo sed -e 's#^RECORD_FILE=.*#RECORD_FILE="/var/log/cron-job-observability/records.sample.csv"#' \
+        /opt/cron-job-observability/job_observability.conf > /tmp/report-sample.conf
+
+# 3. 確認用の設定を使ってレポートを生成する
+sudo env JOBOBS_CONF=/tmp/report-sample.conf \
+        /opt/cron-job-observability/generate_report.sh 2026-09-06
 ```
 
 出力例:
@@ -549,18 +572,23 @@ sudo /opt/cron-job-observability/generate_report.sh 2026-09-06
 最新版へのコピー: /var/log/cron-job-observability/reports/latest.md
 ```
 
-生成されたレポートの一部(検証環境でサンプルデータから生成した実際の出力):
+生成されたレポートの冒頭(検証環境で実際に生成した出力):
 
 ```markdown
-## サマリ
+# cronジョブ実行状況レポート 2026-09-06
 
-| 項目 | 件数 |
+| 項目 | 内容 |
 |---|---|
-| 総実行回数 | 462 |
-| 成功(SUCCESS) | 460 |
-| 失敗(FAILED) | 1 |
-| 多重起動によるスキップ(SKIPPED) | 1 |
+| 対象日 | 2026-09-06 00:00:00 〜 23:59:59 |
+| 対象ホスト | ops01 |
+| 生成日時 | 2026-09-07 14:08:57 |
+| 集計元 | `/var/log/cron-job-observability/records.sample.csv` |
+| ジョブ台帳 | `/opt/cron-job-observability/jobs.conf` |
 ```
+
+レポート全体の内容は [05-effect-measurement.md](./05-effect-measurement.md#37-日次レポートの出力全体) に掲載している。
+
+💡ポイント: 3つのスクリプトは、環境変数 `JOBOBS_CONF` で設定ファイルを差し替えられる作りにしている。**本番の設定・記録に一切触れずに動作を試せる**ため、検証や調査で重宝する。`sudo env 変数=値 コマンド` と書いているのは、`sudo` が既定で環境変数を引き継がないためである。
 
 cronに登録する。
 
@@ -614,10 +642,13 @@ PATH=/usr/bin:/bin
 **なぜ**: 実行記録CSVとジョブログは放置すると増え続ける。あらかじめ上限を決めておく。
 
 ```bash
+cd /path/to/automation/improvements/04-cron-job-observability/src
 sudo cp logrotate-cron-job-observability.conf /etc/logrotate.d/cron-job-observability
 sudo chmod 644 /etc/logrotate.d/cron-job-observability
 sudo logrotate -d /etc/logrotate.d/cron-job-observability
 ```
+
+⚠️注意: 配置先のファイル名に拡張子(`.conf`)を付けない。Ubuntuの既定では `/etc/logrotate.d/` 配下の**すべてのファイル**が読み込まれるため動作はするが、慣習に合わせておくほうが分かりやすい。
 
 出力イメージ(`-d` は確認のみで、実際のローテートは行わない):
 

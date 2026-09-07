@@ -65,16 +65,16 @@ flowchart TD
     W2 --> J1
     W2 --> J2
     W2 --> J3
-    W2 -.出力.-> D3
+    W2 -. 出力 .-> D3
     W4 --> D1
     W5 --> SLACK["Slack<br/>Incoming Webhook"]
 
-    C4 -.起動.-> M1
-    C5 -.起動.-> M2
+    C4 -. 起動 .-> M1
+    C5 -. 起動 .-> M2
 
     D1 --> M1
     D2 --> M1
-    M1 <--> D4
+    M1 -->|"通知状態を読み書き"| D4
     M1 --> SLACK
 
     D1 --> M2
@@ -140,7 +140,7 @@ flowchart TD
     SKIPN --> E0["終了ステータス 0<br/>(多重起動は正しく防げたため)"]
 
     FLOCK -->|"取得できた"| T1["開始時刻を記録"]
-    T1 --> RUN["ジョブ本体を実行<br/>出力は >> ジョブ別ログ 2>&1<br/>ロック用fd9は子に渡さない"]
+    T1 --> RUN["ジョブ本体を実行<br/>標準出力と標準エラー出力を<br/>ジョブ別ログへ追記<br/>ロック用fd9は子に渡さない"]
     RUN --> RC["EXIT_CODE=$? で<br/>終了ステータスを即座に退避"]
     RC --> T2["終了時刻・所要時間を計算"]
     T2 --> REC["実行記録CSVへ1行追記<br/>SUCCESS または FAILED"]
@@ -182,11 +182,11 @@ flowchart TD
 ジョブ別ログの実際の出力例(検証環境で `sample_job.sh --fail` を実行):
 
 ```text
-===== [2026-09-07T13:37:40+0900] START job_id=sample-job pid=4764 cmd=/opt/cron-job-observability/sample_job.sh --fail =====
-[2026-09-07 13:37:40] sample_job.sh を開始します (mode=--fail)
+===== [2026-09-07T13:56:00+0900] START job_id=sample-job pid=6264 cmd=/opt/cron-job-observability/sample_job.sh --fail =====
+[2026-09-07 13:56:00] sample_job.sh を開始します (mode=--fail)
 [ERROR] 疑似的な障害を発生させます (exit 3)
 [ERROR] 例: バックアップ先ディレクトリに書き込めませんでした
-===== [2026-09-07T13:37:40+0900] END   job_id=sample-job status=FAILED exit=3 duration=0s =====
+===== [2026-09-07T13:56:00+0900] END   job_id=sample-job status=FAILED exit=3 duration=0s =====
 ```
 
 ### 2.5 通知の設計
@@ -227,14 +227,14 @@ Webhook URLが未設定(`<YOUR_SLACK_WEBHOOK_URL>` のまま)のときは、送�
 flowchart TD
     START(["deadman_check.sh 開始<br/>(cronから10分ごと)"]) --> LOAD["ジョブ台帳 jobs.conf を読む"]
     LOAD --> LOOP{"有効なジョブが<br/>まだあるか"}
-    LOOP -->|"無い"| END(["終了ステータス 0"])
+    LOOP -->|"無い"| FIN(["終了ステータス 0"])
     LOOP -->|"ある"| FIND["実行記録CSVから<br/>そのジョブの最新の<br/>SUCCESS/FAILED記録を探す<br/>(開始時刻が最大の行)"]
 
     FIND --> HAS{"記録は<br/>あるか"}
     HAS -->|"無い"| MISS["MISSING と判定"]
     HAS -->|"ある"| CALC["経過時間を計算<br/>現在時刻 - 最終実行の開始時刻"]
 
-    CALC --> CMP{"経過時間 ><br/>想定実行間隔 + 猶予時間"}
+    CALC --> CMP{"経過時間が<br/>想定実行間隔 + 猶予時間<br/>を超えたか"}
     CMP -->|"Yes"| MISS
     CMP -->|"No"| OK["OK と判定"]
 
@@ -287,19 +287,19 @@ flowchart TD
 猶予込みの許容時間(60+10=70分)を超えたケース:
 
 ```text
-===== デッドマン監視 (2026-09-07 13:38:56) =====
-[MISSING] sample-job : 最終実行 2026-09-07T11:38:56+0900 から 2時間0分 経過(許容 1時間10分)
+===== デッドマン監視 (2026-09-07 13:56:10) =====
+[MISSING] sample-job : 最終実行 2026-09-07T11:56:10+0900 から 2時間0分 経過(許容 1時間10分)
 ----- 判定結果: 対象 1 件 / 未実行 1 件 -----
 ```
 
 このとき `runner.log` に記録された通知内容(Webhook未設定のためドライラン):
 
 ```text
-2026-09-07 13:38:56 [WARN] [deadman] 未実行を検知しました: sample-job / 最終実行 2026-09-07T11:38:56+0900 から 2時間0分 経過(許容 1時間10分)
-2026-09-07 13:38:56 [NOTIFY] [deadman] (送信せず記録のみ) :alarm_clock: cronジョブが実行されていません (sample-job) | ホスト: vm
-検知時刻: 2026-09-07 13:38:56
-説明: 検証用のダミージョブ
-最終実行 2026-09-07T11:38:56+0900 から 2時間0分 経過(許容 1時間10分)
+2026-09-07 13:56:10 [WARN] [deadman] 未実行を検知しました: sample-job / 最終実行 2026-09-07T11:56:10+0900 から 2時間0分 経過(許容 1時間10分)
+2026-09-07 13:56:10 [NOTIFY] [deadman] (送信せず記録のみ) :alarm_clock: cronジョブが実行されていません (sample-job) | ホスト: ops01
+検知時刻: 2026-09-07 13:56:10
+説明: 検証用のダミージョブ(sample_job.sh)
+最終実行 2026-09-07T11:56:10+0900 から 2時間0分 経過(許容 1時間10分)
 想定実行間隔: 60分 / 猶予: 10分
 crontabの設定・cronサービスの状態・サーバーの時刻を確認してください。
 ```

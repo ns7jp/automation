@@ -285,12 +285,16 @@ ar_send() {
     # 組み立てると簡単に壊れる(案件No.3と同じ方針)。
     payload="$(jq -n --arg text "$text" '{text: $text}')"
 
-    http_status="$(curl -sS -o /dev/null -w '%{http_code}' \
+    # curl 自体が失敗した場合(名前解決できない・接続できない等)は
+    # HTTPステータスが取れないので、"000" を入れて区別できるようにする。
+    if ! http_status="$(curl -sS -o /dev/null -w '%{http_code}' \
         --max-time 10 \
         -X POST \
         -H 'Content-type: application/json' \
         --data "$payload" \
-        "$webhook" 2>/dev/null || printf '000')"
+        "$webhook" 2>/dev/null)"; then
+        http_status="000"
+    fi
 
     if [[ "$http_status" == "200" ]]; then
         ar_record_outbox "$channel" "sent" "$text"

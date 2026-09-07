@@ -12,6 +12,22 @@
 | フェーズ2 | Step 9 | 1週間の試験運用(何も追加しない) | — |
 | フェーズ3 | Step 10〜15 | `recover.sh`(承認つき実行)・sudo設定・logrotate設定 | Step 16-1 |
 
+```mermaid
+flowchart LR
+    P0["Step 0-5<br/>準備・配置・権限"] --> P1["Step 6-8<br/>フェーズ1<br/>診断のみ導入"]
+    P1 --> P2["Step 9<br/>フェーズ2<br/>1週間の試験運用"]
+    P2 --> P3["Step 10-14<br/>フェーズ3<br/>復旧の半自動化"]
+    P3 --> P4["Step 15<br/>運用への引き渡し"]
+
+    P1 -.->|"問題あり"| RB2["Step 16-2<br/>全ロールバック"]
+    P3 -.->|"問題あり"| RB1["Step 16-1<br/>復旧機能のみ停止"]
+
+    classDef ok fill:#dcfce7,stroke:#15803d,color:#14532d
+    classDef rb fill:#fee2e2,stroke:#b91c1c,color:#7f1d1d
+    class P1,P2,P3,P4 ok
+    class RB1,RB2 rb
+```
+
 ---
 
 ## Step 0. 前提の確認

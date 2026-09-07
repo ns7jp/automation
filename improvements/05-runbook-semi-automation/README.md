@@ -75,7 +75,7 @@ flowchart LR
 | 4 | [03-design.md](./03-design.md) | 改善設計書(To-Be)。全体フロー・診断項目と判定基準・確認プロンプト設計・監査ログ仕様・安全設計 |
 | 5 | [04-build-guide.md](./04-build-guide.md) | 実装・移行手順書。段階導入(診断のみ→復旧半自動)とロールバック手順つき |
 | 6 | [05-effect-measurement.md](./05-effect-measurement.md) | 効果測定レポート。Before/After比較・測定方法(障害再現訓練の手順)・未達事項・次の改善 |
-| 7 | [06-troubleshooting.md](./06-troubleshooting.md) | トラブルシューティング集(Q&A形式・8件) |
+| 7 | [06-troubleshooting.md](./06-troubleshooting.md) | トラブルシューティング集(Q&A形式・11件) |
 | 8 | [src/diagnose.sh](./src/diagnose.sh) | 一次切り分け自動化スクリプト(読み取り専用) |
 | 9 | [src/recover.sh](./src/recover.sh) | 復旧半自動化スクリプト(候補提示+承認つき実行) |
 | 10 | [src/lib/common.sh](./src/lib/common.sh) | 共通関数ライブラリ(ログ・監査ログ・確認プロンプト・タイムアウト実行) |
