@@ -1,0 +1,93 @@
+# =====================================================================
+# crontab.example
+# 改善案件No.4: cronのサイレント障害を実行結果の可視化と失敗検知で撲滅
+#   - 改善後のcrontab設定例(rootのcrontabを想定)
+#
+# 使い方:
+#   1. 既存の設定を必ずバックアップしてから編集する
+#        crontab -l > /root/crontab.backup.$(date +%Y%m%d)
+#        crontab -e
+#   2. 各ジョブを「run_job.sh <ジョブID> <元のコマンド>」の形に書き換える
+#   3. `crontab -l` で登録内容を確認する
+#
+# 書式: 分 時 日 月 曜日 実行するコマンド
+#        分(0-59) 時(0-23) 日(1-31) 月(1-12) 曜日(0-7、0と7は日曜)
+# =====================================================================
+
+# ---------------------------------------------------------------------
+# 環境変数の設定
+# ---------------------------------------------------------------------
+# cronは「ログイン時に読み込まれる .bashrc / .profile」を読まない。
+# そのためPATHは既定で非常に短く(通常 /usr/bin:/bin)、
+# 手で叩けば動くコマンドが cron からは「command not found」になる。
+# これがcronの定番のつまずきポイントなので、明示的に設定しておく。
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# MAILTO を空文字にすると、cronは実行結果のメールを送らなくなる。
+# 改善前は「MAILTOが未設定 → rootのメールボックスに溜まる → 誰も見ない」
+# という状態だった。改善後は run_job.sh がSlackへ即時通知するため、
+# 誰も読まないメールをあえて生成しない、という方針にしている。
+MAILTO=""
+
+# ---------------------------------------------------------------------
+# 【改善前】ジョブを直接起動していたときの設定(参考・実行されない)
+# ---------------------------------------------------------------------
+# 失敗しても記録も通知も残らず、多重起動も防げない状態だった。
+#
+#   0 3 * * *    /opt/backup-automation/backup.sh >> /var/log/backup-automation/cron.log 2>&1
+#   */5 * * * *  /opt/server-health-check/health_check.sh >> /var/log/server-health-check/cron.log 2>&1
+
+# ---------------------------------------------------------------------
+# 【改善後】共通ラッパー(run_job.sh)経由での起動
+# ---------------------------------------------------------------------
+# 書き方: run_job.sh <ジョブID> <元のコマンド> [引数...]
+#   ジョブIDは jobs.conf に登録した名前と一致させること。
+#   ジョブ本体のスクリプトには一切手を入れていない点がポイント。
+#
+# 標準出力・標準エラー出力の行き先は run_job.sh がジョブ別ログへ振り分けるため、
+# crontab側で「>> ログ 2>&1」を書く必要はなくなる。
+# ただしラッパー自体が起動できない致命的な事故(パス誤りなど)に備え、
+# 最低限の受け皿として wrapper-cron.log にだけリダイレクトしておく。
+
+# --- 毎日03:00: Webコンテンツの日次バックアップ(projects/02-backup-automation)---
+0 3 * * * /opt/cron-job-observability/run_job.sh backup-daily /opt/backup-automation/backup.sh >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 5分ごと: サーバー死活監視(projects/04-server-health-check)---
+*/5 * * * * /opt/cron-job-observability/run_job.sh health-check /opt/server-health-check/health_check.sh >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 毎日01:30: 基幹DBの論理バックアップ ---
+# パイプやリダイレクトを含むコマンドは、シェルに解釈させるため bash -c で包む。
+# run_job.sh に直接パイプを書くと、パイプはcronのシェルが先に解釈してしまい、
+# ラッパーの外側にコマンドが飛び出してしまうため。
+30 1 * * * /opt/cron-job-observability/run_job.sh db-dump bash -c '/opt/db-backup/dump.sh | gzip > /var/backups/db/dump_$(date +\%Y\%m\%d).sql.gz' >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 毎時15分: 人事CSVからのアカウント同期(projects/01-user-account-automation)---
+15 * * * * /opt/cron-job-observability/run_job.sh user-sync /opt/user-account-automation/create_users.sh -f /var/opt/hr/users.csv >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 毎日04:10: アプリケーションログのローテート ---
+10 4 * * * /opt/cron-job-observability/run_job.sh logrotate-app /usr/sbin/logrotate /etc/logrotate.d/app-custom >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 毎日05:00: 作業用一時ディレクトリの古いファイル削除 ---
+0 5 * * * /opt/cron-job-observability/run_job.sh tmp-cleanup /opt/ops-scripts/tmp_cleanup.sh >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 毎週月曜06:00: SSLサーバー証明書の有効期限チェック ---
+0 6 * * 1 /opt/cron-job-observability/run_job.sh cert-expiry-check /opt/ops-scripts/cert_expiry_check.sh >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 平日07:30: 基幹システムへの売上CSV連携 ---
+# 「1-5」は月曜〜金曜を意味する
+30 7 * * 1-5 /opt/cron-job-observability/run_job.sh sales-csv-transfer /opt/ops-scripts/sales_csv_transfer.sh >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# ---------------------------------------------------------------------
+# 監視の仕組み自身のジョブ
+# ---------------------------------------------------------------------
+# --- 10分ごと: デッドマン監視(未実行の検知)---
+# 監視の間隔を10分にしているのは、
+# 「未実行を検知するまでの遅れ」と「通知の頻度・サーバー負荷」の折り合いから。
+# デッドマン監視自身も run_job.sh 経由で動かすことで、
+# この監視が失敗したときにも通知が飛ぶようにしている。
+*/10 * * * * /opt/cron-job-observability/run_job.sh deadman-check /opt/cron-job-observability/deadman_check.sh >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
+
+# --- 毎日07:10: 前日分の実行状況レポートを生成 ---
+# 始業前に前日分を確認できるよう、朝いちのタイミングで生成する
+10 7 * * * /opt/cron-job-observability/run_job.sh daily-report /opt/cron-job-observability/generate_report.sh yesterday >> /var/log/cron-job-observability/wrapper-cron.log 2>&1
