@@ -85,7 +85,7 @@ flowchart LR
 | `03-design.md` | 改善設計書(To-Be。構成図・処理フロー・技術解説・データ設計) |
 | `04-build-guide.md` | 実装・移行手順書(段階的移行とロールバック手順つき) |
 | `05-effect-measurement.md` | 効果測定レポート(定量比較・測定方法・残課題) |
-| `06-troubleshooting.md` | トラブルシューティング集(Q&A形式・7件) |
+| `06-troubleshooting.md` | トラブルシューティング集(Q&A形式・10件) |
 | `src/ops_report.sh` | 月次レポート生成本体スクリプト |
 | `src/ops_report.conf` | 設定ファイル(入力ログのパス・目標値・通知設定) |
 | `src/collect_logs.sh` | 各サーバーからバックアップログを集めるスクリプト |

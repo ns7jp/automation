@@ -287,12 +287,15 @@ sort -t "$(printf '\t')" -k1,1 "$TMP_FILE" >"$OUT_FILE"
 printf '\nサンプル通知ログを生成しました: %s\n' "$OUT_FILE"
 printf '対象期間: %s から %d 日分 / 合計 %d 件(1日あたり %d 件)\n\n' \
     "$START_DATE" "$DAYS" "$TOTAL" $(( TOTAL / DAYS ))
-printf '%-22s %8s\n' "カテゴリ" "件数"
-printf -- '--------------------------------\n'
+# 日本語は1文字が複数バイトになるため、printf の桁揃え(%-20s など)は
+# 文字数ではなくバイト数で数えられてしまい、見た目が揃わない。
+# そこで「数値を先に、日本語を後ろに」置くことで確実に揃えている。
+printf '  件数  カテゴリ\n'
+printf -- '------  --------------------\n'
 for category in "${CATEGORY_ORDER[@]}"; do
-    printf '%-22s %8d\n' "$category" "${CATEGORY_COUNT[$category]}"
+    printf '%6d  %s\n' "${CATEGORY_COUNT[$category]}" "$category"
 done
-printf -- '--------------------------------\n'
-printf '%-22s %8d\n\n' "合計" "$TOTAL"
+printf -- '------  --------------------\n'
+printf '%6d  %s\n\n' "$TOTAL" "合計"
 
 exit 0

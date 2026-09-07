@@ -233,7 +233,10 @@ rb_init_audit_log() {
             rb_error "監査ログを作成できません: ${log_path}"
             return 1
         }
-        chmod 640 "$log_path" 2>/dev/null || true
+        # 660 = 所有者とグループのみ読み書き可、他人からは見えない。
+        # 障害対応の当番が複数人いるため、グループ(例: ops)にも
+        # 書き込みを許可する必要がある(04-build-guide.md Step 3 参照)。
+        chmod 660 "$log_path" 2>/dev/null || true
     fi
 
     if [ ! -w "$log_path" ]; then
